@@ -1,8 +1,10 @@
 Package: matchingMarkets
-Version: 0.1-5
+Version: 0.1-6
 Depends: R (>= 3.0.2)
 Imports: Rcpp (>= 0.11.2), lpSolve (>= 5.6.6), partitions, stats
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress (>= 0.2)
+Suggests: knitr, testthat
+VignetteBuilder: knitr
 Title: Structural Estimators and Algorithms for the Analysis of Stable
         Matchings
 Author: Thilo Klein
@@ -18,8 +20,8 @@ URL: https://github.com/thiloklein/matchingMarkets,
 License: GPL (>= 2) | file LICENSE
 Repository: CRAN
 Repository/R-Forge/Project: matchingmarkets
-Repository/R-Forge/Revision: 32
-Repository/R-Forge/DateTimeStamp: 2015-07-08 18:29:30
-Date/Publication: 2015-07-08 22:37:26
+Repository/R-Forge/Revision: 35
+Repository/R-Forge/DateTimeStamp: 2015-10-05 21:36:07
+Date/Publication: 2015-10-06 20:53:23
 NeedsCompilation: yes
-Packaged: 2015-07-08 18:45:11 UTC; rforge
+Packaged: 2015-10-05 21:47:30 UTC; rforge

@@ -26,7 +26,7 @@
 #' 
 #' @keywords summary
 #' 
-#' @references Karlson, K.B., A. Holm and R. Breen (2012). Comparing regression coefficients between same-sample nested models using logit and probit: A new method, \emph{Sociological Methodology}, 42(1):286--313.
+#' @references Karlson, K.B., A. Holm and R. Breen (2012). Comparing regression coefficients between same-sample nested models using logit and probit: A new method. \emph{Sociological Methodology}, 42(1):286--313.
 #' 
 #' @examples
 #' ## 1. load results from Klein (2015a)
@@ -55,12 +55,12 @@ khb <- function(X,y,z){
   ## -------------------------------------------------------
   
   ## --- Reduced and Full model, Equations (1) and (2) on page 289 ---
-  glmR <- glm(y ~ -1 + ., family=binomial(link=probit),data=X[,-which(names(X)==z)])
-  glmF <- glm(y ~ -1 + ., family=binomial(link=probit),data=X)
+  glmR <- glm(y ~ -1 + ., family=binomial(link="probit"),data=X[,-which(names(X)==z)])
+  glmF <- glm(y ~ -1 + ., family=binomial(link="probit"),data=X)
 
   ## --- Auxiliary regression, Equation (8) on page 292 ---
   lmA <- lm(X$eta ~ -1 + ., data=X)
-  glmFs <- glm(y ~ -1 + . + lmA$resid, family=binomial(link=probit),data=X[,-which(names(X)==z)])
+  glmFs <- glm(y ~ -1 + . + lmA$resid, family=binomial(link="probit"),data=X[,-which(names(X)==z)])
 
   ## --- Recovery of parameters from Full model and Auxiliary regression ---
   b.yx.zt <- glmFs$coef[!names(glmFs$coef)%in%c("(Intercept)","lmA$resid")]
@@ -85,6 +85,6 @@ khb <- function(X,y,z){
   Z <- (b.yx.zt - b.yx.z)/sqrt((b.yz.x^2 * sigma.t.zx^2 + t.zx^2 * sigma.b.yz.x^2))
   p.val <- round((1-pnorm(Z)),4)
   
-  print(data.frame(p.value=ifelse(p.val<1e-04,"<1e-04",p.val)))
-  cat("\nNull hypothesis: Change in coefficient is not attributable to confounding by z.\n\n") 
+  cat("\nKarlson-Holm-Breen method\nNull hypothesis: Change in coefficient is not attributable to confounding by z.\n\n") 
+  data.frame(p.value=ifelse(p.val<1e-04,"<1e-04",p.val))
 }
