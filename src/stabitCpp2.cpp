@@ -23,13 +23,6 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
   Rcpp::List Lr, Rcpp::List studentIdsr, Rcpp::List collegeIdr, int n, int N,
   bool binary, int niter, int T, int censored, int thin, bool display_progress = true) {
   
-  //-- 
-  // bool gPrior, arma::mat sigmabarbetainverse, arma::mat sigmabaralphainverse, arma::mat sigmabargammainverse,
-  //int censored = 1;
-  
-  // Enable/Disable verbose debug tracing.
-  //bool DEBUG = FALSE;
-
   // ---------------------------------------------
   // Independent variables
   // ---------------------------------------------
@@ -89,22 +82,14 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
   
   // alpha
   arma::colvec alphabar = arma::zeros(kX,1);
-  //if(gPrior == FALSE){
-    arma::mat sigmabaralpha = 10*arma::eye(kX,kX);
-    arma::mat sigmabaralphainverse = arma::inv(sigmabaralpha);
-  //} else{
-  //  sigmabaralphainverse = sigmabaralphainverse;
-  //}
+  arma::mat sigmabaralpha = 10*arma::eye(kX,kX);
+  arma::mat sigmabaralphainverse = arma::inv(sigmabaralpha);
   arma::mat alphabaroversigma = sigmabaralphainverse*alphabar;  
 
   // beta
   arma::colvec betabar = arma::zeros(kC,1);
-  //if(gPrior == FALSE){
-    arma::mat sigmabarbeta = 10*arma::eye(kC,kC);
-    arma::mat sigmabarbetainverse = arma::inv(sigmabarbeta);    
-  //} else{
-  //  sigmabarbetainverse = sigmabarbetainverse;
-  //}
+  arma::mat sigmabarbeta = 10*arma::eye(kC,kC);
+  arma::mat sigmabarbetainverse = arma::inv(sigmabarbeta);    
   arma::colvec betabaroversigma = sigmabarbetainverse*betabar;
   
   // kappa
@@ -143,35 +128,29 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
   arma::colvec sum7 = arma::zeros(1,1); 
   arma::colvec sum8 = arma::zeros(1,1);
   
-  // eta and delta
+  // eta
   arma::colvec eta(n);
-  //arma::colvec delta(n);
-    
+  
   // ---------------------------------------------
   // Matrices for parameter draws.
   // ---------------------------------------------
   
-  arma::mat alphadraws(kX,floor(niter/thin));
-  arma::mat betadraws(kC,floor(niter/thin));
-  arma::mat kappadraws(1,floor(niter/thin));
-  arma::mat etadraws(n,floor(niter/thin));
-  //arma::mat deltadraws(n,floor(niter/thin));
-  arma::mat sigmasquarenudraws(1,floor(niter/thin));
+  arma::mat alphadraws(kX,(niter-(niter % thin))/thin); //floor(niter/thin);
+  arma::mat betadraws(kC,(niter-(niter % thin))/thin);
+  arma::mat kappadraws(1,(niter-(niter % thin))/thin);
+  arma::mat etadraws(n,(niter-(niter % thin))/thin);
+  arma::mat sigmasquarenudraws(1,(niter-(niter % thin))/thin);
   
   // ---------------------------------------------
   // Main loop.
   // ---------------------------------------------  
   
-  Rcout << "Drawing " << niter << " MCMC samples..." << std::endl;
+  Rcpp::Rcout << "Drawing " << niter << " MCMC samples..." << std::endl;
   
   // Initiate Progress Bar
   Progress prog(niter, display_progress);
   
   for(int iter = 0; iter < niter; iter++){
-    
-    //if(iter % 1000 == 999){
-    //  Rcout << iter+1 << " of " << niter << std::endl;
-    //}
     
     // update Progress Bar
     prog.increment(); 
@@ -211,15 +190,12 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
         ivec(0) = i;  
         iuvec = arma::conv_to<arma::uvec>::from(ivec); 
         
-        for(int j=0; j < nStudents(t); j++){
+        for(unsigned int j=0; j < nStudents(t); j++){
           
           // --- Calculation of equilibrium bounds ---
           
-          //Vcupperbar = arma::datum::inf;
-          //Vsupperbar = arma::datum::inf;
           Vclowerbar = -arma::datum::inf;
-          //Vslowerbar = -arma::datum::inf;
-          
+
           if(H(t)(i,j) == 0){  // non-equilibrium matches
             
             // --- Draw valuation (truncated by upper equilibrium bound) ---
@@ -308,8 +284,6 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
     sum8.zeros(1,1); // reset to zero
     
     for(int t=0; t<T; t++){ 
-      //sum7 += sum( pow(Vc(t)(d(t)) - Cmatch(t)*beta, 2) );      
-      //sum8 += sum( (Y(t) - Xmatch(t)*alpha - lambda*(Vs(t)(d(t)) - Smatch(t)*gamma)) * (Vc(t)(d(t)) - Cmatch(t)*beta) );
       sum7 += trans(Vc(t)(d(t)) - Cmatch(t)*beta) * (Vc(t)(d(t)) - Cmatch(t)*beta);      
       sum8 += trans(Y(t) - Xmatch(t)*alpha) * (Vc(t)(d(t)) - Cmatch(t)*beta);
     }      
@@ -332,13 +306,6 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
       eta.rows(etacount, etacount + nStudents(t) - 1) = Vc(t)(d(t)) - Cmatch(t)*beta;
       etacount = etacount + nStudents(t);
     }
-    
-    // ---------------------------------------------
-    // delta.
-    // ---------------------------------------------
-    //for(int t=0; t<T; t++){
-    //  delta.rows(2*t,2*t+1) = V(t).rows(0,1) - W(t).rows(0,1)*alpha;
-    //}
     
     // ---------------------------------------------
     // sigma nu
@@ -368,7 +335,6 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
       betadraws.col(iter/thin) = beta;
       kappadraws.col(iter/thin) = kappa;
       etadraws.col(iter/thin) = eta;
-      //deltadraws.col(iter/thin) = delta;
       
       if(binary == FALSE){
         sigmasquarenudraws.col(iter/thin) = sigmasquarenu;
@@ -376,16 +342,9 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
     }
   }
   
-  // print to screen
-  //Rcout << "done." << std::endl;
-  //Rcout << std::endl;
-  
   // ---------------------------------------------  
-  // The last half of all draws are used in approximating the posterior means and the posterior standard deviations.
+  // Return the parameter draws.
   // ---------------------------------------------  
-  
-  niter = floor(niter/thin);
-  int startiter = floor(niter/2);
   
   if(binary == TRUE){
     return List::create(  
@@ -393,15 +352,7 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
       Named("alphadraws") = alphadraws,
       Named("betadraws") = betadraws,
       Named("kappadraws") = kappadraws,
-      // posterior means
-      Named("eta") = mean(etadraws.cols(startiter,niter-1),1),
-      Named("alpha") = join_rows( mean(betadraws.cols(startiter,niter-1),1), stddev(betadraws.cols(startiter,niter-1),0,1) ),
-      Named("beta") = join_rows( mean(alphadraws.cols(startiter,niter-1),1), stddev(alphadraws.cols(startiter,niter-1),0,1) ),
-      Named("kappa") = join_rows( mean(kappadraws.cols(startiter,niter-1),1), stddev(kappadraws.cols(startiter,niter-1),0,1) ),
-      Named("sigmasquarenu") = join_rows( arma::ones(1,1) , arma::zeros(1,1) ),
-      // vcov
-      Named("alphavcov") = cov(trans(alphadraws.cols(startiter,niter-1))),
-      Named("betavcov") = cov(trans(betadraws.cols(startiter,niter-1)))
+      Named("etadraws") = etadraws
     );  
   } else if(binary == FALSE){
     return List::create(  
@@ -409,16 +360,8 @@ List stabitCpp2(Rcpp::List Yr, Rcpp::List Xmatchr, Rcpp::List Cr,
       Named("alphadraws") = alphadraws,
       Named("betadraws") = betadraws,
       Named("kappadraws") = kappadraws,
-      Named("sigmasquarenudraws") = sigmasquarenudraws,
-      // posterior means
-      Named("eta") = mean(etadraws.cols(startiter,niter-1),1),
-      Named("alpha") = join_rows( mean(alphadraws.cols(startiter,niter-1),1), stddev(alphadraws.cols(startiter,niter-1),0,1) ),
-      Named("beta") = join_rows( mean(betadraws.cols(startiter,niter-1),1), stddev(betadraws.cols(startiter,niter-1),0,1) ),
-      Named("kappa") = join_rows( mean(kappadraws.cols(startiter,niter-1),1), stddev(kappadraws.cols(startiter,niter-1),0,1) ),
-      Named("sigmasquarenu") = join_rows( mean(sigmasquarenudraws.cols(startiter,niter-1),1), stddev(sigmasquarenudraws.cols(startiter,niter-1),0,1) ),
-      // vcov
-      Named("alphavcov") = cov(trans(alphadraws.cols(startiter,niter-1))),
-      Named("betavcov") = cov(trans(betadraws.cols(startiter,niter-1)))
+      Named("etadraws") = etadraws,
+      Named("sigmasquarenudraws") = sigmasquarenudraws
     );
   } else{
       return 0;
@@ -486,9 +429,7 @@ double exp_rs(double a, double b)
 {
   double  z, u, rate;
 
-//  Rprintf("in exp_rs");
   rate = 1/a;
-//1/a
 
    // Generate a proposal on (0, b-a)
    z = R::rexp(rate);

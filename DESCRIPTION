@@ -1,7 +1,7 @@
 Package: matchingMarkets
-Version: 0.3-1
-Depends: R (>= 3.0.2), rJava
-Imports: Rcpp (>= 0.11.2), partitions, stats
+Version: 0.3-2
+Depends: R (>= 3.0.2)
+Imports: Rcpp (>= 0.11.2), rJava, partitions, stats
 SystemRequirements: Java
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress (>= 0.2)
 Suggests: knitr
@@ -24,8 +24,8 @@ License: GPL (>= 2) | file LICENSE
 RoxygenNote: 5.0.1
 Repository: CRAN
 Repository/R-Forge/Project: matchingmarkets
-Repository/R-Forge/Revision: 51
-Repository/R-Forge/DateTimeStamp: 2016-08-21 12:51:21
-Date/Publication: 2016-08-21 15:49:50
+Repository/R-Forge/Revision: 55
+Repository/R-Forge/DateTimeStamp: 2016-08-26 18:54:34
+Date/Publication: 2016-08-27 07:52:47
 NeedsCompilation: yes
-Packaged: 2016-08-21 13:08:02 UTC; rforge
+Packaged: 2016-08-26 19:07:57 UTC; rforge

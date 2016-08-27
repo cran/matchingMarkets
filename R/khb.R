@@ -31,16 +31,9 @@
 #' @examples
 #' ## 1. load results from Klein (2015a)
 #'  data(klein15a)
-#'  M <- klein15a$model.list
 #' 
-#' ## 2. extract variables
-#'  X <- do.call(rbind.data.frame, M$X)
-#'  eta <- c(klein15a$coefs$eta, rep(0, length(M$X)-length(M$W)))
-#'  X <- cbind(X,eta)
-#'  y <- unlist(M$R)
-#' 
-#' ## 3. apply KHB method
-#' khb(X=X, y=y, z="eta")
+#' ## 2. apply KHB method
+#' with(klein15a$variables, khb(X=X, y=Y, z="eta"))
 khb <- function(X,y,z){
 
   ## -------------------------------------------------------
@@ -53,6 +46,9 @@ khb <- function(X,y,z){
   ## y : vector of dependent variable
   ## z : confounding variable
   ## -------------------------------------------------------
+  
+  ## --- Preliminaries
+  X <- as.data.frame(X)
   
   ## --- Reduced and Full model, Equations (1) and (2) on page 289 ---
   glmR <- glm(y ~ -1 + ., family=binomial(link="probit"),data=X[,-which(names(X)==z)])
