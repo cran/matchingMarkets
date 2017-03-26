@@ -12,16 +12,13 @@ double truncn(double bound, bool lb, double mu, double sigma);
 
 //' @export
 // [[Rcpp::export]]
-List stabitCpp(Rcpp::List Xr, Rcpp::List Rr, Rcpp::List Wr, 
+List stabitSel2(Rcpp::List Xr, Rcpp::List Rr, Rcpp::List Wr, 
   arma::colvec One, arma::colvec Two, int T,
   Rcpp::List offOutr, Rcpp::List offSelr,
   arma::mat sigmabarbetainverse, arma::mat sigmabaralphainverse,
   int niter, double n, arma::colvec l, Rcpp::List Pr, arma::colvec p,
   bool binary, bool selection, int censored, bool ntu, bool gPrior,
   bool display_progress=true) {
-    
-  // Enable/Disable verbose debug tracing.
-  bool DEBUG = FALSE;
 
   // Market identifiers.
   int Two1=Two(0), TwoN=Two(1), One1=One(0), OneN=One(1);

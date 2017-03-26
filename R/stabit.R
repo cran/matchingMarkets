@@ -8,17 +8,26 @@
 #
 # ----------------------------------------------------------------------------
 
-#' @title Structural Matching Model to correct for sample selection bias in one-sided matching markets
+#' @title Matching model and selection correction for group formation
 #'
-#' @description The function provides a Gibbs sampler for a structural matching model that corrects for sample selection bias when the selection process is a one-sided matching game; that is, group/coalition formation.
+#' @description The function provides a Gibbs sampler for a structural matching model that 
+#' estimates preferences and corrects for sample selection bias when the selection process 
+#' is a one-sided matching game; that is, group/coalition formation.
 #'
-#' The input is individual-level data of all group members from one-sided matching marktes; that is, from group/coalition formation games. 
+#' The input is individual-level data of all group members from one-sided matching marktes; that is, 
+#' from group/coalition formation games. 
 #' 
-#' In a first step, the function generates a model matrix with characteristics of \emph{all feasible} groups of the same size as the observed groups in the market. 
+#' In a first step, the function generates a model matrix with characteristics of \emph{all feasible} 
+#' groups of the same size as the observed groups in the market. 
 #' 
-#' For example, in the stable roommates problem with \eqn{n=4} students \eqn{\{1,2,3,4\}}{{1,2,3,4}} sorting into groups of 2, we have \eqn{{4 \choose 2}=6}{"4 choose 2" = 6} feasible groups: (1,2)(3,4) (1,3)(2,4) (1,4)(2,3).
+#' For example, in the stable roommates problem with \eqn{n=4} students \eqn{\{1,2,3,4\}}{{1,2,3,4}} 
+#' sorting into groups of 2, we have \eqn{ {4 \choose 2}=6 }{choose(4,2) = 6} feasible groups: 
+#' (1,2)(3,4) (1,3)(2,4) (1,4)(2,3).
 #' 
-#' In the group formation problem with \eqn{n=6} students \eqn{\{1,2,3,4,5,6\}}{{1,2,3,4,5,6}} sorting into groups of 3, we have \eqn{{6 \choose 3}=20}{"6 choose 3" = 20} feasible groups. For the same students sorting into groups of sizes 2 and 4, we have \eqn{{6 \choose 2} + {6 \choose 4}=30}{"6 choose 2" + "6 choose 4" = 30} feasible groups.
+#' In the group formation problem with \eqn{n=6} students \eqn{\{1,2,3,4,5,6\}}{{1,2,3,4,5,6}} 
+#' sorting into groups of 3, we have \eqn{ {6 \choose 3} =20}{choose(6,3) = 20} feasible groups. 
+#' For the same students sorting into groups of sizes 2 and 4, we have \eqn{ {6 \choose 2} + 
+#' {6 \choose 4}=30}{choose(6,2) + choose(6,4) = 30} feasible groups.
 #'
 #' The structural model consists of a selection and an outcome equation. The \emph{Selection Equation} 
 #' determines which matches are observed (\eqn{D=1}) and which are not (\eqn{D=0}).
@@ -82,15 +91,17 @@
 #' @param interSel two-colum matrix indicating the indices of columns in \code{W} that should be interacted in estimation. Use 0 for none.
 #' @param standardize numeric: if \code{standardize>0} the independent variables will be standardized by dividing by \code{standardize} times their standard deviation. Defaults to no standardization \code{standardize=0}. 
 #' @param niter number of iterations to use for the Gibbs sampler.
+#' @param verbose .
 #' 
 #' @export
 #' 
-#' @useDynLib matchingMarkets
+#' @useDynLib matchingMarkets, .registration = TRUE 
 #' 
 #' @import partitions stats
-#' @importFrom Rcpp evalCpp
+#' @importFrom Rcpp evalCpp 
+#' @importFrom utils setTxtProgressBar txtProgressBar
 #' 
-#' @aliases stabitCpp
+#' @aliases stabitSel2
 #' 
 #' @details 
 #' Operators for variable transformations in \code{selection} and \code{outcome} arguments.
@@ -103,45 +114,6 @@
 #' \item{\code{dst}}{sum over all possible two-way distances between players and divide by number of those, where distance is defined as \eqn{e^{-|x-y|}}{exp(-|x-y|)}.}
 #' }
 #' 
-#' @section Values of model.list:
-#' \describe{
-#' \item{\code{D}}{vector that indicates -- for all feasible groups in the market -- whether a group is observed in the data \code{D=1} or not \code{D=0}.}
-#' \item{\code{R}}{list of group-level outcome vectors for equilibrium groups.}
-#' \item{\code{W}}{list with data.frame \code{W[[t]][G,]} containing characteristics of group \code{G} in market \code{t} (all feasible groups).}
-#' \item{\code{X}}{list with data.frame \code{X[[t]][G,]} containing characteristics of group \code{G} in market \code{t} (equilibrium groups only).}
-#' \item{\code{V}}{vector of group valuations for all feasible groups in the market.}
-#' \item{\code{P}}{vector that gives for each group the index of the group comprised of residual individuals in the market (for 2-group markets).}
-#' \item{\code{epsilon}}{if \code{simulation!="none"}, the errors in the outcome equation, given by \code{delta*eta + xi}.}
-#' \item{\code{eta}}{if \code{simulation!="none"}, the standard normally distributed errors in the selection equation.}
-#' \item{\code{xi}}{if \code{simulation!="none"}, the standard normally distributed component of the errors in the selection equation that is independent of \code{eta}.}
-#' \item{\code{combs}}{partitions matrix that gives all feasible partitions of the market into groups of the observed sizes.}
-#' \item{\code{E}}{matrix that gives the indices of equilibrium group members for each group in the market. Only differs from the first two rows in \code{combs} if \code{simulation!="none"}.}
-#' 
-#' \item{\code{sigmasquareximean}}{variance estimate of the error term \code{xi} in the outcome equation.}
-#' }
-#' @section Values of model.frame:
-#' \describe{
-#' \item{\code{SEL}}{data frame comprising variables in selection equation and number of observations equal to the number of feasible groups.}
-#' \item{\code{OUT}}{data frame comprising variables in outcome equation and number of observations equal to the number of equilibrium groups.}
-#' }
-#' @section Values of draws:
-#' \describe{
-#' \item{\code{alphadraws}}{matrix of dimension \code{ncol(W)} \code{x} \code{niter} comprising all paramter draws for the selection equation.}
-#' \item{\code{betadraws}}{matrix of dimension \code{ncol(X)} \code{x} \code{niter} comprising all paramter draws for the outcome equation.}
-#' \item{\code{deltadraws}}{vector of length \code{niter} comprising all draws for the \code{delta} parameter.}
-#' \item{\code{sigmasquarexidraws}}{.}
-#' }
-#' @section Values of coefs:
-#' \describe{
-#' \item{\code{eta}}{vector containing the mean of all \code{eta} draws for each observed group.}
-#' \item{\code{alphavcov}}{variance-covariance matrix of draws in alphadraws.}
-#' \item{\code{betavcov}}{variance-covariance matrix of draws in betadraws.}
-#' \item{\code{alpha}}{matrix comprising the coefficient estimates of alpha and their standard errors.}
-#' \item{\code{beta}}{matrix comprising the coefficient estimates of beta and their standard errors.}
-#' \item{\code{delta}}{coefficient estimate of delta and its standard error.}
-#' \item{\code{sigmasquarexi}}{variance estimate of the error term \code{xi} in the outcome equation and its standard error.}
-#' }
-#' 
 #' @author Thilo Klein 
 #' 
 #' @keywords regression
@@ -152,21 +124,20 @@
 #' volume 6, pages 233--243. North-Holland, Amsterdam.
 #' 
 #' @examples
-#' 
 #' \dontrun{
 #' ## --- SIMULATED EXAMPLE ---
 #' 
-#' ## 1. Simulate one-sided matching data for 1,000 markets (m=1000) with 2 groups
-#' ##    per market (gpm=2) and 5 individuals per group (ind=5)
+#' ## 1. Simulate one-sided matching data for 200 markets (m=200) with 2 groups
+#' ##    per market (gpm=2) and 5 individuals per group (ind=5). True parameters 
+#' ##    in selection equation is wst=1, in outcome equation wst=0. 
 #' 
 #' ## 1-a. Simulate individual-level, independent variables
-#'  idata <- stabsim(m=1000, ind=5, seed=123, gpm=2)
+#'  idata <- stabsim(m=200, ind=5, seed=123, gpm=2)
 #'  head(idata)
 #'  
-#' ## 1-b. Simulate group-level variables (takes a minute to complete...)
+#' ## 1-b. Simulate group-level variables 
 #'  mdata <- stabit(x=idata, simulation="NTU", method="model.frame",
-#'                  selection = list(ieq="wst"),
-#'                  outcome = list(ieq="wst"))$model.frame
+#'  selection = list(add="wst"), outcome = list(add="wst"), verbose=FALSE)
 #'  head(mdata$OUT)
 #'  head(mdata$SEL)
 #' 
@@ -174,34 +145,38 @@
 #' ## 2. Bias from sorting
 #' 
 #' ## 2-a. Naive OLS estimation
-#'  lm(R ~ wst.ieq, data=mdata$OUT)$coefficients
+#'  lm(R ~ wst.add, data=mdata$OUT)$coefficients
 #' 
 #' ## 2-b. epsilon is correlated with independent variables
-#'  with(mdata$OUT, cor(epsilon, wst.ieq))
+#'  with(mdata$OUT, cor(epsilon, wst.add))
 #'  
 #' ## 2-c. but xi is uncorrelated with independent variables
-#'  with(mdata$OUT, cor(xi, wst.ieq))
+#'  with(mdata$OUT, cor(xi, wst.add))
 #' 
 #' ## 3. Correction of sorting bias when valuations V are observed
 #' 
 #' ## 3-a. 1st stage: obtain fitted value for eta
-#' lm.sel <- lm(V ~ -1 + wst.ieq, data=mdata$SEL)
+#' lm.sel <- lm(V ~ -1 + wst.add, data=mdata$SEL)
 #' lm.sel$coefficients
 #' 
 #' eta <- lm.sel$resid[mdata$SEL$D==1]
 #' 
 #' ## 3-b. 2nd stage: control for eta
-#'  lm(R ~ wst.ieq + eta, data=mdata$OUT)$coefficients
+#'  lm(R ~ wst.add + eta, data=mdata$OUT)$coefficients
 #' 
 #' 
 #' ## 4. Run Gibbs sampler
-#'  fit1 <- stabit(x=idata, selection = list(ieq="wst"), 
-#'         outcome = list(ieq="wst"), method="NTU", 
-#'         simulation="NTU", niter=2000)
+#'  fit1 <- stabit(x=idata, method="NTU", simulation="NTU", censored=1, 
+#'                 selection = list(add="wst"), outcome = list(add="wst"), 
+#'                 niter=2000, verbose=FALSE)
 #' 
 #' 
 #' ## 5. Coefficient table
 #'  summary(fit1)
+#' 
+#' 
+#' ## 6. Plot MCMC draws for coefficients
+#'  plot(fit1)
 #' 
 #' 
 #' ## --- REPLICATION, Klein (2015a) ---
@@ -217,12 +192,15 @@
 #' 
 #' ## 3. Marginal effects
 #'  summary(klein15a, mfx=TRUE)
+#'  
+#' ## 4. Plot MCMC draws for coefficients
+#'  plot(klein15a)
 #' }
 stabit <- function(x, m.id="m.id", g.id="g.id", R="R", selection=NULL, outcome=NULL, 
                    simulation="none", seed=123, max.combs=Inf,
                    method="NTU", binary=FALSE, offsetOut=0, offsetSel=0, 
                    marketFE=FALSE, censored=0, gPrior=FALSE, dropOnes=FALSE, interOut=0, interSel=0, 
-                   standardize=0, niter=10){
+                   standardize=0, niter=10, verbose=FALSE){
   
   # -----------------------------------------------------------------------------
   # Generate design matrix.
@@ -232,7 +210,7 @@ stabit <- function(x, m.id="m.id", g.id="g.id", R="R", selection=NULL, outcome=N
   
   data <- design.matrix(x, m.id=m.id, g.id=g.id, R=R, selection=selection, outcome=outcome, 
                         simulation, assignment=assignment, seed=seed, max.combs=max.combs,
-                        standardize=standardize)
+                        standardize=standardize, verbose=verbose)
   
   # -----------------------------------------------------------------------------
   # Obtain parameter estimates.
@@ -457,11 +435,11 @@ stabit <- function(x, m.id="m.id", g.id="g.id", R="R", selection=NULL, outcome=N
     # Source C++ script
     # -----------------------------------------------------------------------------    
     
-    est <- stabitCpp(Xr=X, Rr=R, Wr=W, One=One, Two=Two, T=T, 
-                     offOutr=offOut, offSelr=offSel,
-                     sigmabarbetainverse=sigmabarbetainverse, sigmabaralphainverse=sigmabaralphainverse,
-                     niter=niter, n=n, l=matrix(unlist(l),length(l),1), Pr=P, p=matrix(unlist(p),length(p),1),
-                     binary=binary, selection=sel, censored=censored, gPrior=gPrior, ntu=NTU)
+    est <- stabitSel2(Xr=X, Rr=R, Wr=W, One=One, Two=Two, T=T, 
+                      offOutr=offOut, offSelr=offSel,
+                      sigmabarbetainverse=sigmabarbetainverse, sigmabaralphainverse=sigmabaralphainverse,
+                      niter=niter, n=n, l=matrix(unlist(l),length(l),1), Pr=P, p=matrix(unlist(p),length(p),1),
+                      binary=binary, selection=sel, censored=censored, gPrior=gPrior, ntu=NTU)
     
     # -----------------------------------------------------------------------------
     # Add names to coefficients.
@@ -575,7 +553,8 @@ stabit <- function(x, m.id="m.id", g.id="g.id", R="R", selection=NULL, outcome=N
     # ----------------------------------------------------------------------------- 
     
     model.frame <- unlistData(x=data)
-    return(list(model.list=data, model.frame=model.frame))
+    model.frame
+    #return(list(model.list=data, model.frame=model.frame))
     
   }
 }
@@ -645,7 +624,7 @@ unlistData <- function(x){
 
 design.matrix <- function(x, m.id="m.id", g.id="g.id", R="R", selection=NULL, outcome=NULL, 
                           simulation=FALSE, assignment="NTU", seed=123, max.combs=Inf,
-                          standardize=0){  
+                          standardize=0, verbose=verbose){  
   
   # --------------------------------------------------------------------
   # R-code (www.r-project.org) to obtain a design matrix for the analysis
@@ -677,7 +656,7 @@ design.matrix <- function(x, m.id="m.id", g.id="g.id", R="R", selection=NULL, ou
   ## create design matrix
   designmatrix(selection=selection, outcome=outcome, x=x,
                simulation=simulation, assignment=assignment, seed=seed, spec=spec, CMATS=CMATS,
-               INDEXMAT=INDEXMAT, standardize=standardize)
+               INDEXMAT=INDEXMAT, standardize=standardize, verbose=verbose)
 }
 
 
@@ -999,7 +978,7 @@ wrap <- function(thisdata, indices, num, denom, j, names.xw){
 
 
 designmatrix <- function(selection, outcome, x, simulation=FALSE, assignment, 
-                         seed, spec, CMATS, INDEXMAT, standardize){ 
+                         seed, spec, CMATS, INDEXMAT, standardize, verbose=verbose){ 
   
   # --------------------------------------------------------------------
   # R-code (www.r-project.org) to set up the design matrix for the analysis
@@ -1061,13 +1040,12 @@ designmatrix <- function(selection, outcome, x, simulation=FALSE, assignment,
   data.combs <- D <- R <- V <- P <- E <- combs <- xi <- eta <- epsilon <- 
     lapply(1:numvills, function(i) NA)
   
-  cat("Generating the model.frame for",numvills,"markets...","\n")
+  cat("Generating group-level data for", numvills, "markets...","\n")
+  if(verbose==TRUE){
+    pb <- txtProgressBar(style = 3)
+  }
   
   for(i in 1:numvills){
-    
-    if(i %% 10 == 0){
-      cat(i,"of",numvills,"\n")
-    }
     
     if(i <= dim(spec)[1]){  ## 2-GROUP MARKETS
       
@@ -1144,6 +1122,9 @@ designmatrix <- function(selection, outcome, x, simulation=FALSE, assignment,
       R[[i]] <- thisdata[1,"R"]
       
     }
+    if(verbose==TRUE){
+      setTxtProgressBar(pb, i/numvills)
+    }
   }
   
   
@@ -1188,7 +1169,7 @@ designmatrix <- function(selection, outcome, x, simulation=FALSE, assignment,
         ## EQUILIBRIUM GROUP SELECTION
         xi[[i]]      <- rnorm(ncombs)
         eta[[i]]     <- rnorm(ncombs)
-        delta        <- 0.5
+        delta        <- 1
         epsilon[[i]] <- xi[[i]] + delta*eta[[i]]
         
         V[[i]] <- apply(data.combs[[i]], 1, sum) + eta[[i]]
@@ -1238,7 +1219,7 @@ designmatrix <- function(selection, outcome, x, simulation=FALSE, assignment,
         }
         xi[[i]]      <- xi[[i]][c(equ1,equ2)]
         epsilon[[i]] <- epsilon[[i]][c(equ1,equ2)]
-        R[[i]] <- -1*apply(as.matrix( data.combs[[i]][1:2,], nrow=2), 1, sum) + epsilon[[i]]
+        R[[i]] <- 0*apply(as.matrix( data.combs[[i]][1:2,], nrow=2), 1, sum) + epsilon[[i]]
         #R[[i]] <- ifelse(R[[i]] > 1, 1, 0) # uncomment me!
         
         E[[i]] <- thiscmat[c(equ1,equ2),]
@@ -1256,8 +1237,6 @@ designmatrix <- function(selection, outcome, x, simulation=FALSE, assignment,
       }
     }
   }
-  
-  cat("done.","\n")
   
   ###################
   ## WRITE RESULTS ##

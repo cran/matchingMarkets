@@ -7,11 +7,11 @@
 # for full details see the file LICENSE
 #
 # ----------------------------------------------------------------------------
-#' @title Structural Matching Model to correct for sample selection bias in two-sided matching markets
+#' @title Matching model and selection correction for college admissions
 #'
-#' @description The function provides a Gibbs sampler for a structural matching model that corrects 
-#' for sample selection bias when the selection process is a two-sided matching game; i.e., 
-#' a matching of students to colleges.
+#' @description The function provides a Gibbs sampler for a structural matching model that 
+#' estimates preferences and corrects for sample selection bias when the selection process 
+#' is a two-sided matching game; i.e., a matching of students to colleges.
 #'
 #' The structural model consists of a selection and an outcome equation. The \emph{Selection Equation} 
 #' determines which matches are observed (\eqn{D=1}) and which are not (\eqn{D=0}).
@@ -62,6 +62,7 @@
 #' @param gPrior logical: if \code{TRUE} the g-prior (Zellner, 1986) is used for the variance-covariance matrix. (Not yet implemented)
 #' @param censored draws of the \code{kappa} parameter that estimates the covariation between the error terms in selection and outcome equation are 0:not censored, 1:censored from below, 2:censored from above.
 #' @param thin integer indicating the level of thinning in the MCMC draws. The default \code{thin=1} saves every draw, \code{thin=2} every second, etc.
+#' @param nCores number of cores to be used in parallel Gibbs sampling.
 #' @param ... .
 #' 
 # @param selection.college formula for match valuations of colleges. Is ignored when \code{selection} is provided.
@@ -77,12 +78,13 @@
 #' 
 #' @export
 #' 
-#' @useDynLib matchingMarkets
+#' @useDynLib matchingMarkets, .registration = TRUE 
 #' 
-#' @import partitions stats
-#' @importFrom Rcpp evalCpp
+#' @import stats lattice parallel
+#' @importFrom Rcpp evalCpp 
+#' @importFrom graphics par plot
 #' 
-#' @aliases stabitCpp2 stabitCpp3
+#' @aliases stabit2Sel2 stabit2Sel1 stabit2Mat1
 #' 
 #' @author Thilo Klein 
 #' 
@@ -92,16 +94,16 @@
 #' \emph{Journal of Finance}, 62 (6): 2725-2762.
 #' 
 #' @examples
-#' ## --- SIMULATED EXAMPLE ---
 #' \dontrun{
+#' ## --- SIMULATED EXAMPLE ---
+#' 
 #' ## 1. Simulate two-sided matching data for 20 markets (m=20) with 100 students
 #' ##    (nStudents=100) per market and 20 colleges with quotas of 5 students, each
 #' ##    (nSlots=rep(5,20)). True parameters in selection and outcome equations are 
 #' ##    all equal to 1.
 #' 
-#' xdata <- stabsim2(m=20, nStudents=100, nSlots=rep(5,20), 
-#'   colleges = "c1",
-#'   students = "s1",
+#' xdata <- stabsim2(m=20, nStudents=100, nSlots=rep(5,20), verbose=FALSE,
+#'   colleges = "c1", students = "s1",
 #'   outcome = ~ c1:s1 + eta + nu,
 #'   selection = ~ -1 + c1:s1 + eta
 #' )
@@ -157,43 +159,24 @@
 #'  summary(fit2, mfx=TRUE)
 #'  
 #' ## 4-d. Also try the following functions
-#'  coef(fit2)
-#'  fitted(fit2)
-#'  residuals(fit2)
-#'  predict(fit, newdata=NULL)
+#'  #coef(fit2)
+#'  #fitted(fit2)
+#'  #residuals(fit2)
+#'  #predict(fit2, newdata=NULL)
 #'
 #'    
-#' ## 5. Plot MCMC draws for coefficients in outcome equation
-#'  res <- as.data.frame(t(fit2$draws$alphadraws))
-#'  res$iteration <- 1:nrow(res)
-#'  library(tidyr)
-#'  res.long <- gather(res, condition, measurement, 1:(ncol(res)-1))
-#'  
-#'  library(lattice)
-#'  lattice.options(default.args=list(as.table=TRUE), 
-#'                  default.theme=standard.theme(color=FALSE))
-#'  xyplot(measurement ~ iteration | factor(condition), 
-#'         data = res.long, scales=list(relation="free"),
-#'         xlab = "iterations",
-#'         ylab = "paramter draws", type = "l") 
+#' ## 5. Plot MCMC draws for coefficients
+#'  plot(fit2)
 #' }
-stabit2 <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome, selection,
+stabit2 <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, outcome=NULL, selection,
                     binary=FALSE, niter, gPrior=FALSE, 
-                    censored=1, thin=1, ...) UseMethod("stabit2")
+                    censored=1, thin=1, nCores=max(1,detectCores()-1), ...) UseMethod("stabit2")
+
 
 #' @export
-print.stabit2 <- function(x, ...){
-  
-  cat("Call:\n")
-  print(x$call)
-  cat("\nCoefficients:\n")
-  print(x$coefficients)
-}
-
-#' @export
-stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome, selection,
+stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, outcome=NULL, selection,
                             binary=FALSE, niter, gPrior=FALSE, 
-                            censored=1, thin=1, ...){
+                            censored=1, thin=1, nCores=max(1,detectCores()-1), ...){
   
   ## ------------------------
   ## --- 1. Preliminaries ---
@@ -204,6 +187,11 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
     selection.college <- selection$college
     selection.student <- selection$student
     selection <- NULL
+    if(is.null(OUT)){
+      method <- "Klein-selection" # no outcome equation
+      OUT <- SEL$SELs[SEL$SELs$D==1,]
+      OUT$Y <- rep(0,nrow(OUT))
+    }
   } else{
     method <- "Sorensen" # single selection equation with equal sharing rule for student and college utility
   }
@@ -226,6 +214,9 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
     SELs <- split(SELs, SELs$m.id) 
     SELc <- split(SELc, SELc$m.id) 
   }
+  
+  ## number of cores need not exceed number of markets
+  nCores <- min(length(SELc), nCores)
   
   ## market and agent identifiers
   m.id <- "m.id"
@@ -256,7 +247,7 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
     d[[i]]      <- as.matrix(X$d) - 1
     M[[i]]      <- as.matrix(X$M) - 1
     indices[[i]] <- X$indices
-    if(method=="Klein"){
+    if(method=="Klein" | method=="Klein-selection"){
       S[[i]]      <- as.matrix(X$S)
       Smatch[[i]] <- as.matrix(X$Smatch)
       H[[i]]      <- X$H
@@ -271,7 +262,7 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
   T <- length(Y); #// Number of markets.
   nColleges <- nStudents <- XXmatch <- CC <- SS <- CCmatch <- SSmatch <- list()
   L <- rep(list(vector()),T)
-  if(method=="Klein"){
+  if(method=="Klein" | method=="Klein-selection"){
     studentIds <- collegeId <- rep(list(matrix()),T)
   } else{
     studentIds <- collegeId <- rep(list(vector()),T)
@@ -280,18 +271,17 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
   ## further results
   s <- 0
   for(i in 1:T){
-    if(method=="Klein"){
+    if(method=="Klein" | method=="Klein-selection"){
       nColleges[[i]] <- nrow(H[[i]][,,1])
       nStudents[[i]] <- ncol(H[[i]][,,1])
     } else{
       nColleges[[i]] <- nrow(H[[i]])
       nStudents[[i]] <- ncol(H[[i]])
     }
-    
     XXmatch[[i]]   <- t(Xmatch[[i]]) %*% Xmatch[[i]]
     CC[[i]]        <- t(C[[i]]) %*% C[[i]]
     CCmatch[[i]]   <- t(Cmatch[[i]]) %*% Cmatch[[i]]
-    if(method=="Klein"){
+    if(method=="Klein" | method=="Klein-selection"){
       SSmatch[[i]]   <- t(Smatch[[i]]) %*% Smatch[[i]]
       SS[[i]]        <- t(S[[i]]) %*% S[[i]]
       collegeId[[i]] <- matrix(NA, nrow=nStudents[[i]], ncol=dim(H[[i]])[3]) ##
@@ -301,7 +291,7 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
     for(j in 1:nColleges[[i]]){
       s <- s+1
       L[[i]][j] <- s - 1
-      if(method=="Klein"){
+      if(method=="Klein" | method=="Klein-selection"){
         studentIds[[s]] <- matrix(NA, nrow=length(which(H[[i]][j,,1] == 1)), ncol=dim(H[[i]])[3])
         for(k in 1:dim(H[[i]])[3]){
           studentIds[[s]][,k] <- which(H[[i]][j,,k] == 1) - 1
@@ -312,7 +302,7 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
     }
     
     for(j in 1:nStudents[[i]]){
-      if(method=="Klein"){
+      if(method=="Klein" | method=="Klein-selection"){
         for(k in 1:dim(H[[i]])[3]){
           collegeId[[i]][j,k] <- which(H[[i]][,j,k] == 1) - 1
         }
@@ -328,7 +318,7 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
   ## ---------------------------------------------------------------------------------------------
   ## --- 3. Mapping of hospital/residents problem (HR) to related stable marriage problem (SM) ---
   
-  if(method=="Klein"){
+  if(method=="Klein" | method=="Klein-selection"){
     
     sopt.id <- 1 ## student-optimal matching is first in lists
     
@@ -381,28 +371,178 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
     }
   }
   
+  ## drop unused objects
+  rm(H2)
+  
   ## adjust index for college-optimal matching for C++
   copt.id <- copt.id -1
   
   ## ----------------------------
   ## --- 4. Run Gibbs sampler ---
   
-  if(method=="Klein"){
+  #save.image("~/Desktop/play.RData")
+  #load("~/Desktop/play.RData")
+  
+  if(nCores > 1){
     
-    est <- stabitCpp3(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, Sr=S, Smatchr=Smatch, Dr=D, dr=d,
-                      Mr=M, Hr=H, nCollegesr=unlist(nColleges), nStudentsr=unlist(nStudents), XXmatchr=XXmatch, 
-                      CCr=CC, SSr=SS, SSmatchr=SSmatch, CCmatchr=CCmatch, Lr=L,
-                      studentIdsr=studentIds, collegeIdr=collegeId, nEquilibsr=nEquilibs,
-                      equ2soptr=equ2sopt, sopt2equr=sopt2equ, equ2coptr=equ2copt, copt2equr=copt2equ,
-                      coptidr=copt.id, n=n, N=N, binary=binary, niter=niter, thin=thin, T=T, censored=censored)
+    ## split market ids (Ts) and Ns evenly to the number of cores (nCores)
+    Ts <- split(1:T, cut(1:T, breaks=nCores, labels=FALSE))
+    Ns <- list()
+    for(i in 1:length(Ts)){
+      if(i==1){
+        Ns[[i]] <- 1:sum(unlist(nColleges[ Ts[[i]] ]))
+      } else{
+        Ns[[i]] <- max(Ns[[i-1]]) + ( 1:sum(unlist(nColleges[ Ts[[i]] ])) )
+        L[ Ts[[i]] ] <- lapply(L[ Ts[[i]] ], function(z){
+          z - min(unlist(L[ Ts[[i]] ])) 
+        })
+      }
+    }  
     
-  } else if(method=="Sorensen"){
+    ## setup cluster
+    cl <- makeCluster(nCores) 
+    clusterEvalQ(cl, library(matchingMarkets))
     
-    est <- stabitCpp2(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, Dr=D, dr=d,
-                      Mr=M, Hr=H, nCollegesr=unlist(nColleges), nStudentsr=unlist(nStudents), XXmatchr=XXmatch, 
-                      CCr=CC, CCmatchr=CCmatch, Lr=L, 
-                      studentIdsr=studentIds, collegeIdr=collegeId, 
-                      n=n, N=N, binary=binary, niter=niter, thin=thin, T=T, censored=censored)
+    if(method == "Klein"){
+      
+      ## to avoid 
+      parObject <- lapply(1:nCores, function(i){
+        list(Y=Y[Ts[[i]]], Xmatch=Xmatch[Ts[[i]]], C=C[Ts[[i]]], Cmatch=Cmatch[Ts[[i]]], 
+        S=S[Ts[[i]]], Smatch=Smatch[Ts[[i]]], D=D[Ts[[i]]], d=d[Ts[[i]]], M=M[Ts[[i]]], 
+        H=H[Ts[[i]]], nColleges=unlist(nColleges[Ts[[i]]]), nStudents=unlist(nStudents[Ts[[i]]]), 
+        XXmatch=XXmatch[Ts[[i]]], CC=CC[Ts[[i]]], SS=SS[Ts[[i]]], SSmatch=SSmatch[Ts[[i]]], 
+        CCmatch=CCmatch[Ts[[i]]], L=L[Ts[[i]]], studentIds=studentIds[Ns[[i]]], 
+        collegeId=collegeId[Ts[[i]]], nEquilibs=nEquilibs[Ts[[i]]], equ2sopt=equ2sopt[Ts[[i]]], 
+        sopt2equ=sopt2equ[Ts[[i]]], equ2copt=equ2copt[Ts[[i]]], copt2equ=copt2equ[Ts[[i]]], 
+        coptid=copt.id[Ts[[i]]], n=sum(unlist(nStudents[Ts[[i]]])), N=sum(unlist(nColleges[Ts[[i]]])), 
+        binary=binary, niter=niter, thin=thin, T=length(Ts[[i]]), censored=censored)
+      })
+      
+      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      res <- parLapply(cl, parObject, function(d){
+        
+        with(d, stabit2Sel1(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, 
+                            Sr=S, Smatchr=Smatch, Dr=D, dr=d, Mr=M, 
+                            Hr=H, nCollegesr=nColleges, nStudentsr=nStudents, 
+                            XXmatchr=XXmatch, CCr=CC, SSr=SS, SSmatchr=SSmatch, 
+                            CCmatchr=CCmatch, Lr=L, studentIdsr=studentIds, 
+                            collegeIdr=collegeId, nEquilibsr=nEquilibs, equ2soptr=equ2sopt, 
+                            sopt2equr=sopt2equ, equ2coptr=equ2copt, copt2equr=copt2equ, 
+                            coptidr=coptid, n=n, N=N, 
+                            binary=binary, niter=niter, thin=thin, T=T, censored=censored))
+      })
+      
+    } else if(method == "Klein-selection"){
+      
+      ## to avoid 
+      parObject <- lapply(1:nCores, function(i){
+        list(C=C[Ts[[i]]], Cmatch=Cmatch[Ts[[i]]], S=S[Ts[[i]]], Smatch=Smatch[Ts[[i]]], D=D[Ts[[i]]], 
+             d=d[Ts[[i]]], M=M[Ts[[i]]], H=H[Ts[[i]]], nColleges=unlist(nColleges[Ts[[i]]]), 
+             nStudents=unlist(nStudents[Ts[[i]]]), CC=CC[Ts[[i]]], SS=SS[Ts[[i]]], 
+             SSmatch=SSmatch[Ts[[i]]], CCmatch=CCmatch[Ts[[i]]], L=L[Ts[[i]]], 
+             studentIds=studentIds[Ns[[i]]], collegeId=collegeId[Ts[[i]]], nEquilibs=nEquilibs[Ts[[i]]],
+             equ2sopt=equ2sopt[Ts[[i]]], sopt2equ=sopt2equ[Ts[[i]]], equ2copt=equ2copt[Ts[[i]]], 
+             copt2equ=copt2equ[Ts[[i]]], coptid=copt.id[Ts[[i]]], n=sum(unlist(nStudents[Ts[[i]]])), 
+             N=sum(unlist(nColleges[Ts[[i]]])), niter=niter, thin=thin, T=length(Ts[[i]]))
+      })
+      
+      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      res <- parLapply(cl, parObject, function(d){  
+        
+        with(d, stabit2Mat1(Cr=C, Cmatchr=Cmatch, Sr=S, Smatchr=Smatch, Dr=D, 
+                            dr=d, Mr=M, Hr=H, nCollegesr=nColleges, 
+                            nStudentsr=nStudents, CCr=CC, SSr=SS, 
+                            SSmatchr=SSmatch, CCmatchr=CCmatch, Lr=L, 
+                            studentIdsr=studentIds, collegeIdr=collegeId, nEquilibsr=nEquilibs,
+                            equ2soptr=equ2sopt, sopt2equr=sopt2equ, equ2coptr=equ2copt, 
+                            copt2equr=copt2equ, coptidr=coptid, n=n, 
+                            N=N, niter=niter, thin=thin, T=T))
+      })
+      
+    } else if(method == "Sorensen"){
+
+      ## to avoid 
+      parObject <- lapply(1:nCores, function(i){
+        list(Y=Y[Ts[[i]]], Xmatch=Xmatch[Ts[[i]]], C=C[Ts[[i]]], Cmatch=Cmatch[Ts[[i]]], 
+             D=D[Ts[[i]]], d=d[Ts[[i]]], M=M[Ts[[i]]], H=H[Ts[[i]]], 
+             nColleges=unlist(nColleges[Ts[[i]]]), nStudents=unlist(nStudents[Ts[[i]]]), 
+             XXmatch=XXmatch[Ts[[i]]], CC=CC[Ts[[i]]], CCmatch=CCmatch[Ts[[i]]], L=L[Ts[[i]]], 
+             studentIds=studentIds[Ns[[i]]], collegeId=collegeId[Ts[[i]]], 
+             n=sum(unlist(nStudents[Ts[[i]]])), N=sum(unlist(nColleges[Ts[[i]]])), 
+             binary=binary, niter=niter, thin=thin, T=length(Ts[[i]]), censored=censored)
+      })
+      
+      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      res <- parLapply(cl, parObject, function(d){  
+        
+        with(d, stabit2Sel2(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, 
+                            Dr=D, dr=d, Mr=M, Hr=H, 
+                            nCollegesr=nColleges, nStudentsr=nStudents, 
+                            XXmatchr=XXmatch, CCr=CC, CCmatchr=CCmatch, Lr=L, 
+                            studentIdsr=studentIds, collegeIdr=collegeId, 
+                            n=n, N=N, 
+                            binary=binary, niter=niter, thin=thin, T=T, censored=censored))
+      })
+    }
+    
+    rm(parObject, Ts, Ns)
+    stopCluster(cl)
+    
+    ## split results into draws for paramters (res1) and error terms (res2)
+    res1 <- lapply(res, function(z) z[!names(z) %in% c("etadraws", "deltadraws")])
+    res2 <- lapply(res, function(z) z[names(z) %in% c("etadraws", "deltadraws")])
+    rm(res)
+    
+    ## combine results from different cores for error terms
+    est2 <- lapply(1:length(res2[[1]]), function(z){
+      do.call(rbind, lapply(res2, function(d) d[[z]] ))
+    })
+    names(est2) <- names(res2[[1]]); rm(res2)
+    
+    ## combine results from different cores for parameter draws
+    toarray <- function(x, y){
+      array(unlist(lapply(x, function(z) z[[y]] )), 
+            dim = c(nrow(res1[[1]][[y]]), ncol(res1[[1]][[y]]), length(res1)) )
+    }
+    est1 <- sapply(1:length(res1[[1]]), function(z){
+      toarray( res1, names(res1[[1]])[z] )
+    })
+    names(est1) <- names(res1[[1]]); rm(res1)
+    est1 <- lapply(est1, consensusMC)
+    
+    ## combine results for paramters (est1) and error terms (est2)
+    est <- c(est1, est2); rm(est1, est2)
+    
+  } else{
+    #Ts <- 1:T
+    #Ns <- 1:N  
+    
+    if(method=="Klein"){
+      
+      est <- stabit2Sel1(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, Sr=S, Smatchr=Smatch, Dr=D, dr=d,
+                         Mr=M, Hr=H, nCollegesr=unlist(nColleges), nStudentsr=unlist(nStudents), XXmatchr=XXmatch, 
+                         CCr=CC, SSr=SS, SSmatchr=SSmatch, CCmatchr=CCmatch, Lr=L,
+                         studentIdsr=studentIds, collegeIdr=collegeId, nEquilibsr=nEquilibs,
+                         equ2soptr=equ2sopt, sopt2equr=sopt2equ, equ2coptr=equ2copt, copt2equr=copt2equ,
+                         coptidr=copt.id, n=n, N=N, binary=binary, niter=niter, thin=thin, T=T, censored=censored)
+      
+    } else if(method=="Klein-selection"){
+      
+      est <- stabit2Mat1(Cr=C, Cmatchr=Cmatch, Sr=S, Smatchr=Smatch, Dr=D, dr=d,
+                         Mr=M, Hr=H, nCollegesr=unlist(nColleges), nStudentsr=unlist(nStudents),
+                         CCr=CC, SSr=SS, SSmatchr=SSmatch, CCmatchr=CCmatch, Lr=L,
+                         studentIdsr=studentIds, collegeIdr=collegeId, nEquilibsr=nEquilibs,
+                         equ2soptr=equ2sopt, sopt2equr=sopt2equ, equ2coptr=equ2copt, copt2equr=copt2equ,
+                         coptidr=copt.id, n=n, N=N, niter=niter, thin=thin, T=T)
+      
+    } else if(method=="Sorensen"){
+      
+      est <- stabit2Sel2(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, Dr=D, dr=d,
+                         Mr=M, Hr=H, nCollegesr=unlist(nColleges), nStudentsr=unlist(nStudents), XXmatchr=XXmatch, 
+                         CCr=CC, CCmatchr=CCmatch, Lr=L, 
+                         studentIdsr=studentIds, collegeIdr=collegeId, 
+                         n=n, N=N, binary=binary, niter=niter, thin=thin, T=T, censored=censored)
+    }
   }
   
   # ------------------------------------
@@ -410,9 +550,11 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
   
   ## variable names
   
-  an <- colnames(Xmatch[[1]])
+  if(method!="Klein-selection"){
+    an <- colnames(Xmatch[[1]])
+  }
   bn <- colnames(C[[1]])
-  if(method=="Klein"){
+  if(method=="Klein" | method=="Klein-selection"){
     cn <- colnames(S[[1]])
   }
   
@@ -429,30 +571,34 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
     est$kappadraws  <- NULL
     est$lambdadraws <- NULL
     rownames(est$gammadraws) = cn
+  } else if(method=="Klein-selection"){
+    rownames(est$gammadraws) = cn
   }
   
   ## posterior means
   
   ## The last half of all draws are used in approximating the posterior means and the posterior standard deviations.
-  niter <- dim(est$alphadraws)[2]
+  niter <- dim(est$betadraws)[2]
   startiter <- floor(niter/2)
   
   posMeans <- function(x){
     sapply(1:nrow(x), function(z) mean(x[z,startiter:niter]))
   }
   
-  est$alpha <- posMeans(est$alphadraws) 
-  names(est$alpha) <- rownames(est$alphadraws)
+  if(method!="Klein-selection"){
+    est$alpha <- posMeans(est$alphadraws) 
+    names(est$alpha) <- rownames(est$alphadraws)
+  }
   
   est$beta <- posMeans(est$betadraws)
   names(est$beta) <- bn
   
-  if(method=="Klein"){
+  if(method=="Klein" | method=="Klein-selection"){
     est$gamma <- posMeans(est$gammadraws)
     names(est$gamma) <- cn
   }
   
-  if(binary==FALSE){
+  if(method!="Klein-selection" & binary==FALSE){
     est$sigma <- sqrt(posMeans(est$sigmasquarenudraws))
     est$sigmasquarenudraws <- NULL
   }
@@ -461,30 +607,41 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
   
   est$eta <- posMeans(est$etadraws)
   est$etadraws <- NULL
-  if(method=="Klein"){
+  if(method=="Klein" | method=="Klein-selection"){
     est$delta <- posMeans(est$deltadraws)
     est$deltadraws <- NULL
   }
   
   ## vcov
   
-  est$vcov$alpha <- var(t(est$alphadraws))
+  if(method!="Klein-selection"){
+    est$vcov$alpha <- var(t(est$alphadraws))
+  }
   est$vcov$beta <- var(t(est$betadraws))
-  if(method=="Klein"){
+  if(method=="Klein" | method=="Klein-selection"){
     est$vcov$gamma <- var(t(est$gammadraws))
   }
   
   ## variables
   
-  est$X <- do.call(rbind, Xmatch)
-  est$X <- cbind(est$X, eta=est$eta)
-  if(method=="Klein"){
-    est$X <- cbind(est$X, delta=est$delta)
-    est$S <- do.call(rbind, S)  
-  }
   est$C <- do.call(rbind, C)
-  est$Y <- do.call(c, Y)
   est$D <- do.call(c, D)
+  
+  if(method!="Klein-selection"){
+    est$Y <- do.call(c, Y)
+    est$X <- do.call(rbind, Xmatch)
+    
+    if(method=="Klein"){
+      est$X <- cbind(est$X, eta=est$eta, delta=est$delta)
+      est$S <- do.call(rbind, S)  
+    } else if(method=="Sorensen"){
+      est$X <- cbind(est$X, eta=est$eta)
+    }
+  } else if(method=="Klein-selection"){
+    est$S <- do.call(rbind, S)
+  } 
+  
+  ## other output
   
   if(method=="Sorensen"){
     
@@ -493,15 +650,29 @@ stabit2.default <- function(OUT, SEL=NULL, colleges=NULL, students=NULL, outcome
   } else if(method=="Klein"){
     
     est$coefficients <- unlist(with(est, list(o=alpha, c=beta, s=gamma)))
+    
+  } else if(method=="Klein-selection"){
+    
+    est$coefficients <- unlist(with(est, list(c=beta, s=gamma)))
+    
   }
-  est$fitted.values <- with(est, as.vector(X %*% alpha))
-  est$residuals <- est$Y - est$fitted.values
-  est$df <- n-ncol(est$X)
+  
+  if(method!="Klein-selection"){
+    est$fitted.values <- with(est, as.vector(X %*% alpha))
+    est$residuals <- est$Y - est$fitted.values
+    est$df <- n - ncol(est$X)
+    est$binary <- binary
+    est$formula <- outcome
+  } else{
+    #est$fitted.values <- with(est, as.vector(X %*% alpha))
+    #est$residuals <- est$Y - est$fitted.values
+    est$df <- n*N - ncol(est$C) - ncol(est$S)
+    #est$binary <- binary
+    #est$formula <- outcome
+  }
   
   est$call <- match.call()
   est$method <- method
-  est$binary <- binary
-  est$formula <- outcome
   
   ## consolidate
   
@@ -539,16 +710,62 @@ rFormula <- function(formula, data=list(), ...){
 
 
 
+consensusMC <- function(subchain){
+  
+  ddata = length(dim(subchain))
+  
+  d          <- dim(subchain)[1]  
+  sampletotT <- dim(subchain)[2]    
+  M          <- dim(subchain)[3]
+  
+  if ( M==1 ){ 
+    theta <- array(subchain[,,1],c(d,sampletotT))
+    return (theta)
+  }
+  
+  ## compute sigmahatm & sigmahatm.inverse (= W_s)  
+  sigmahatm     <- array(NA,c(d,d,M))    
+  sigmahatM     <- matrix(NA,d,d)
+  sigmahatM.pre <- matrix(NA,d,d)        
+  if (d==1){
+    for (k in 1:M) { sigmahatm[1,,k] <- var(subchain[1,,k]) }    
+  } else{
+    for (k in 1:M) { sigmahatm[,,k] <- cov(t(subchain[,,k])) }
+  }
+  
+  ## compute inverses of covariance matrices (with try()):
+  sigmahatm.inverse <- array(NA,dim=c(d,d,M))
+  for (k in 1:M){    
+    res <- try( sigmahatm.inverse[,,k] <- solve(sigmahatm[,,k]), silent=TRUE)  
+  }            
+  sigmahatM <- solve(rowSums(sigmahatm.inverse, dims=2)) # (sum W_s)^(-1)
+  
+  ## compute unified posterior samples
+  theta <- matrix(NA,nrow=d,ncol=sampletotT) # the resulting posterior samples
+  wvec  <- array(NA, c(d,1))
+  for (i in 1:sampletotT){
+    wvec <- rep(0,d)
+    for (s in 1:M){
+      wvec <- wvec + sigmahatm.inverse[,,s] %*% subchain[,i,s] 
+    }
+    theta[,i] <- sigmahatM %*% wvec        
+  }
+  return(theta)
+}
+
+
+
+
 stabit2_inner <- function(iter, OUT, SEL, SELs, SELc, colleges, students, 
                           m.id="m.id", c.id="c.id", s.id="s.id", 
                           outcome, selection, selection.student, selection.college, 
-                          s.prefs=s.prefs, c.prefs=c.prefs, method){
+                          s.prefs, c.prefs, method){
   
   ## ----------------------------------------------------------------------------------------------
   ## --- 1. Sort datasets by colleges (c.id) and students (s.id), put equilibrium matches first ---
   
   if(!is.null(SEL)){
-    
+  
     ## sort SEL by c.id and s.id (based on OUT)
     idOUT <- with(OUT, paste(c.id, s.id, sep="_"))
     SEL$idSEL <- with(SEL, paste(c.id, s.id, sep="_"))
@@ -633,7 +850,7 @@ stabit2_inner <- function(iter, OUT, SEL, SELs, SELc, colleges, students,
   M <- matrix(ind.org$index, nrow=length(uColleges), ncol=length(uStudents), byrow=TRUE)
   H <- matrix(ind.org$D, nrow=length(uColleges), ncol=length(uStudents), byrow=TRUE)  
   
-  if(method == "Klein"){
+  if(method == "Klein" | method=="Klein-selection"){
     
     ## preference inputs
     s.prefs <- s.prefs[[iter]]
@@ -645,7 +862,7 @@ stabit2_inner <- function(iter, OUT, SEL, SELs, SELc, colleges, students,
     copt.id <- unique(res$matching[res$cOptimal==1]) # college-optimal matching
     res <- split(res, as.factor(res$matching))
     
-    ## create adjecency matrices for all equilibrium matchings
+    ## create adjacency matrices for all equilibrium matchings
     myfun <- function(x, type){
       H <- array(0, dim=c(length(unique(x[[1]][,type])), nrow(x[[1]]), length(x)))
       for(j in 1:length(x)){
@@ -697,9 +914,13 @@ stabit2_inner <- function(iter, OUT, SEL, SELs, SELc, colleges, students,
     
   } else{
     
-    Xmatch <- rFormula(formula = outcome, data=OUT)
+    if(method!="Klein-selection"){
+      Xmatch <- rFormula(formula = outcome, data=OUT)
+    } else{
+      Xmatch <- rFormula(formula = selection.student, data=OUT)
+    }
     
-    if(method=="Klein"){
+    if(method=="Klein" | method=="Klein-selection"){
       
       C <- rFormula(formula = selection.college, data=SELc)
       S <- rFormula(formula = selection.student, data=SELs)
@@ -716,7 +937,7 @@ stabit2_inner <- function(iter, OUT, SEL, SELs, SELc, colleges, students,
   ## -----------------------------
   ## --- 4. Return the results ---
   
-  if(method=="Klein"){
+  if(method=="Klein" | method=="Klein-selection"){
     
     return( list(Y=Xmatch[,1], Xmatch=Xmatch[,-1], C=C, Cmatch=C[D==1,], S=S, Smatch=S[D==1,], 
                  D=D, d=d, M=M, H=H, H2=H2, copt.id=copt.id, indices=indices$id) )
@@ -728,222 +949,5 @@ stabit2_inner <- function(iter, OUT, SEL, SELs, SELc, colleges, students,
   }  
 }  
 
-
-
-
-#' @export
-summary.stabit2 <- function(object, mfx=FALSE, ...){
-  
-  ## function to produce regression tables
-  tab <- function(coefs, vcov){
-    se <- sqrt(diag(vcov))
-    tval <- coefs / se
-    TAB <- cbind(Estimate = coefs,
-                 StdErr = se,
-                 t.value = tval,
-                 p.value = 2*pt(-abs(tval), df=object$df))
-    TAB
-  }
-  
-  res <- list()
-  
-  ## Selection equation(s)
-  
-  if(object$method!="Outcome-only"){
-    
-    if(mfx==FALSE){
-      
-      if(object$method=="Klein"){
-        
-        res$college <- tab(coefs=object$coefs$beta, vcov=object$vcov$beta)
-        
-        res$student <- tab(coefs=object$coefs$gamma, vcov=object$vcov$gamma)
-        
-      } else{
-        
-        res$selection <- tab(coefs=object$coefs$beta, vcov=object$vcov$beta)
-      }
-      
-    } else if(mfx==TRUE){
-      
-      if(object$method=="Klein"){
-        
-        res$college <- mfxVal(coefs = object$coefs$beta, 
-                              vcov = object$vcov$beta,
-                              df = nrow(object$variables$C) - ncol(object$variables$C) )
-        
-        res$student <- mfxVal(coefs = object$coefs$gamma, 
-                              vcov = object$vcov$gamma,
-                              df = nrow(object$variables$S) - ncol(object$variables$S) )
-        
-      } else if(object$method=="Sorensen"){
-        
-        res$selection <- mfxVal(coefs = object$coefs$beta, 
-                                vcov = object$vcov$beta,
-                                df = nrow(object$variables$C) - ncol(object$variables$C) )
-      }  else{
-        
-        res$selection <- mfxVal(coefs = object$coefs$beta, 
-                                vcov = object$vcov$beta,
-                                df = nrow(object$variables$W) - ncol(object$variables$W) )
-      }
-    }
-  }
-  
-  
-  ## Outcome equation
-  
-  if(mfx==FALSE){
-    
-    res$outcome <- tab(coefs=object$coefs$alpha, vcov=object$vcov$alpha)
-    
-  } else{
-    
-    if(object$binary==TRUE){
-      
-      res$outcome <- mfxOut(sims = 10000, X = object$variables$X,
-                            coefs = object$coefs$alpha,
-                            vcov = object$vcov$alpha,
-                            df = nrow(object$variables$X) - ncol(object$variables$X) )
-    } else{
-      
-      res$outcome <- tab(coefs = object$coefs$alpha,
-                         vcov = object$vcov$alpha )
-    }
-  }
-  
-  res$call <- object$call
-  res$method <- object$method
-  res$mfx <- mfx
-  
-  class(res) <- "summary.stabit2"
-  res
-}
-
-
-mfxOut <- function(sims=10000, x.mean=TRUE, coefs, vcov, X, df){
-  
-  ## source: http://researchrepository.ucd.ie/handle/10197/3404
-  ## method: average of individual marginal effects at each observation
-  ## interpretation: http://www.indiana.edu/~statmath/stat/all/cdvm/cdvm.pdf page 8
-  
-  set.seed(1984)
-  se <- sqrt(diag(vcov))
-  
-  if(x.mean==TRUE){
-    
-    ## marginal effects are calculated at the means of independent variables
-    pdf <- dnorm(mean(X%*%coefs))
-    pdfsd <- dnorm(sd(X%*%coefs))
-    
-  } else{
-    
-    ## marginal effects are calculated for each observation and then averaged
-    pdf <- mean(dnorm(X%*%coefs))
-    pdfsd <- sd(dnorm(X%*%coefs))
-  }  
-  mx <- pdf*coefs
-  
-  sim <- matrix(rep(NA,sims*length(coefs)), nrow=sims)
-  
-  for(i in 1:length(coefs)){
-    sim[,i] <- rnorm(sims,coefs[i],se[i])
-  }
-  
-  pdfsim <- rnorm(sims,pdf,pdfsd)
-  sim.se <- pdfsim*sim
-  s.e. <- apply(sim.se,2,sd)
-  
-  tval <- mx / s.e.
-  TAB <- cbind(Estimate = mx,
-               StdErr = s.e.,
-               t.value = tval,
-               p.value = pt(-abs(tval), df=df))
-  TAB
-}
-
-
-mfxVal <- function(coefs, vcov, df){
-  
-  ## Reference: Sorensen (2007, p. 2748)
-  se <- sqrt(diag(vcov))
-  mx <- dnorm(0)*coefs/sqrt(2)
-  s.e. <- dnorm(0)*se/sqrt(2)
-  tval <- mx / s.e.
-  TAB <- cbind(Estimate = mx,
-               StdErr = s.e.,
-               t.value = tval,
-               p.value = pt(-abs(tval), df=df))
-  TAB
-}
-
-
-
-
-#' @export
-print.summary.stabit2 <- function(x, ...){
-  
-  if(x$mfx==TRUE){
-    cat("\nMarginal effects for multi-index sample selection model.")
-  } else{
-    cat("\nCoefficients for multi-index sample selection model.")
-  }
-  
-  if(x$method=="Klein"){
-    cat("\nMethod: Klein (2016), two-sided matching market\n")
-  } else if(x$method=="Sorensen"){
-    cat("\nMethod: Sorensen (2007), two-sided matching market\n")
-  } else{
-    cat("\nMethod: Klein (2015), one-sided matching market\n")
-  }
-  
-  cat("\nCall:\n")
-  print(x$call)
-  
-  if(x$method!="Outcome-only"){
-    
-    if(x$method=="Klein"){
-      
-      cat("\nSelection equation (Valuation over colleges):")
-      cat("\n")
-      printCoefmat(x$college, P.values=TRUE, has.Pvalue=TRUE, signif.legend=FALSE)
-      
-      cat("\nSelection equation (Valuation over students):")
-      cat("\n")
-      printCoefmat(x$student, P.values=TRUE, has.Pvalue=TRUE, signif.legend=FALSE)
-      
-    } else{
-      
-      cat("\nSelection equation:")
-      cat("\n")
-      printCoefmat(x$selection, P.values=TRUE, has.Pvalue=TRUE, signif.legend=FALSE) 
-    }
-  }
-  
-  cat("\nOutcome equation:")
-  cat("\n")
-  printCoefmat(x$outcome, P.values=TRUE, has.Pvalue=TRUE, signif.legend=TRUE)
-  
-}
-
-
-
-
-#' @export
-predict.stabit2 <- function(object, newdata=NULL, ...){
-  if(is.null(newdata))
-    y <- fitted(object)
-  else{
-    if(!is.null(object$formula)){
-      ## model has been fitted using formula interface
-      x <- model.matrix(object$formula, newdata)
-    }
-    else{
-      x <- newdata
-    }
-    y <- as.vector(x %*% object$coefs$alpha)
-  }
-  y
-}
 
 
