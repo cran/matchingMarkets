@@ -10,8 +10,9 @@ static DAmatcher* dam{};
 // [[Rcpp::export]]
 List runMatch(Rcpp::List students, Rcpp::List programs, Rcpp::List couples) {
   //matchrp using Roth Peranson 1999 algorithm with re-randomization of couple ordering
-  params.readOptions();
-
+  
+  params.readOptions(2);
+  
   Problem prob {};
   if(!prob.readProblem(students, couples, programs)) {
     Rcpp::Rcout  << prob.getError();

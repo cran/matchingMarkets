@@ -4,9 +4,11 @@
 \alias{hri2}
 \title{Resident-optimal matching in the hospital/residents problem with couples}
 \usage{
-hri2(nStudents = ncol(s.prefs), nColleges = ncol(c.prefs), nSlots = rep(1,
-  nColleges), nCouples = ncol(co.prefs), s.prefs = NULL, c.prefs = NULL,
-  co.prefs = NULL, seed = NULL, ...)
+hri2(nStudents = ncol(s.prefs), nColleges = ncol(c.prefs),
+  nSlots = rep(1, nColleges), nCouples = ncol(co.prefs),
+  s.prefs = NULL, c.prefs = NULL, co.prefs = NULL,
+  randomization = "multiple", seed = NULL, check_consistency = TRUE,
+  ...)
 }
 \arguments{
 \item{nStudents}{integer indicating the number of students (in the college admissions problem) 
@@ -33,17 +35,21 @@ preference (i.e. most preferred first).}
 columns containing student couple id's; \code{3}th and \code{4}th is a 2-tuple ranking over college preference for the couple (coupleStudent1.pref, coupleStudent2.pref) in decreasing order of 
 preference by rows (i.e. most preferred first).}
 
+\item{randomization}{determines at which level and in which order random lottery numbers for student priorities are drawn. The default is \code{randomization = "multiple"}, where a student's priority is determined by a separate lottery at each college (i.e. local tie-breaking). For the second variant, \code{randomization = "single"}, a single lottery number determines a student's priority at all colleges (i.e. global tie breaking). A third variant is common in the context of course allocation, where a "couple" represents a student who submits a preference ranking over single courses (first course) and combinations of courses (first and second course). Here, the option \code{randomization = "single-course-first"} gives applications for a student's single courses strictly higher priority than for course combinations. This ensures the fairness criterion that a student is only assigned a second course after single course applications of all students have been considered.}
+
 \item{seed}{integer setting the state for random number generation.}
+
+\item{check_consistency}{Performs additional consicentcy checks if the preference matrices are given by characters. Defaults to \code{FALSE}. Set to \code{FALSE} to reduce run-time.}
 
 \item{...}{.}
 }
 \value{
 \code{hri2} returns a list of the following elements:
-\item{matchings}{list of matched students and colleges.}
-\item{summary}{detailed report of the matching result, including futher information on ranks. See function: summary.hrci(x)}
+\item{matchings}{List of matched students and colleges.}
+\item{summary}{Detailed report of the matching result, including futher information on ranks.}
 }
 \description{
-Implements the Roth Peranson matching algorithm for the \href{https://en.wikipedia.org/wiki/National_Resident_Matching_Program}{hospital/residents problem with couples} as described in Roth and Peranson (1999). The function is based on a adoption of Fahiem Bacchus's \href{https://github.com/aperrau/stable-matching-suite}{stable-matching-suite}.
+Implements the Roth Peranson matching algorithm for the \href{https://en.wikipedia.org/wiki/National_Resident_Matching_Program}{hospital/residents problem with couples} as described in Roth and Peranson (1999). The function is based on an adoption of Bacchus (2018).
 }
 \section{Minimum required arguments}{
 
@@ -56,11 +62,12 @@ Implements the Roth Peranson matching algorithm for the \href{https://en.wikiped
 }
 
 \examples{
+\dontrun{
 ## Example with given preferences
-s.prefs <- matrix(c(4,2,3,5,1, 2,1,3,4,5, 1,2,3,4,5), 5,3)
-c.prefs <- matrix(c(1,2,3, 1,2,3, 1,2,3, 1,2,3, 1,2,3), 3,5)
-co.prefs <- matrix(c(4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5, 1,2,1,2,3,3,4,3, 1,1,2,2,2,3,3,4), 8,4)
-res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, nSlots=c(1,1,1,1,1))
+(s.prefs <- matrix(c(4,2,3,5, 2,1,3,NA, 1,2,3,4), 4,3))
+(c.prefs <- matrix(rep(1:5,5), 5,5))
+(co.prefs <- matrix(c(rep(4,3), rep(5,3), 3,3,NA, 3,NA,3), 3,4))
+res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, nSlots=rep(1,5))
 res$matchings
 # summary(res)
 
@@ -72,8 +79,42 @@ nSlots <- sample(1:nStudents, nColleges)
 res <- hri2(nStudents=nStudents, nColleges=nColleges, nCouples=nCouples, nSlots=nSlots)
 res$matchings
 # summary(res)
+
+## Example with characters in the preferences matrices
+s.prefs <- matrix(c("Micro1", NA, NA,
+                    "Micro2", "Micro1", "Macro",
+                    "Macro",NA ,NA), 
+                    ncol = 3)
+colnames(s.prefs) <- c('Lea', 'Mia', 'Kai')
+c.prefs <- matrix(c("Niklas", "Kai", "Mia", "Anna",
+                    "Lea", "Kai", "Anna",NA,
+                    "Kai", "Mia", "Lea",NA), 
+                    ncol = 3)
+colnames(c.prefs) <- c('Micro1', 'Micro2', 'Macro')
+col1 <- c(rep("Niklas",4),rep("Anna",5))
+col2 <- c(rep("Jan",4),rep("Lisa",5))
+col3 <- c("Micro1","Macro","Micro1",NA,"Macro",
+          NA,"Micro2","Micro2","Macro")
+col4 <- c("Micro2","Micro1",NA,"Macro","Macro",
+          "Micro1","Micro2","Macro",NA)
+co.prefs <- matrix(c(col1,col2,col3,col4), ncol = 4)
+res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, 
+            nSlots=c(2,1,1))                     
+res$matching
+
+## Example if students are allowed to apply and be accepted by two courses   
+col12 <- c(rep(c(rep("Niklas",4),rep("Anna",2)),2))
+col3 <- c("Micro1","Macro","Micro1","Macro","Macro","Macro")
+col4 <- c("Micro2","Micro1",NA,NA,"Micro1","Micro2")
+co.prefs <- matrix(c(col12,col3,col4), ncol = 4)
+res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, 
+            nSlots=c(2,1,1))                     
+res$matching
+}                                                                                
 }
 \references{
+Bacchus, F. (2018). Stable matching suite. GitHub repository.
+
 Gale, D. and L.S. Shapley (1962). College admissions and the stability 
 of marriage. \emph{The American Mathematical Monthly}, 69(1):9--15.
 

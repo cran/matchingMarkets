@@ -1,5 +1,5 @@
 Package: matchingMarkets
-Version: 0.3-5
+Version: 0.3-6
 Depends: R (>= 3.0.2)
 Imports: Rcpp (>= 0.12.12), RcppProgress (>= 0.2), rJava, lpSolve,
         lattice, partitions, parallel, stats, utils
@@ -11,9 +11,12 @@ Title: Analysis of Stable Matchings
 Authors@R: c(person("Thilo", "Klein", role = c("aut", "cre"),
                      email = "thilo@klein.uk"),
               person("Sven", "Giegerich", role = "ctb",
-                     email = "sven.giegerich@mailbox.org"))
+                     email = "sven.giegerich@mailbox.org"),
+              person("Alexander", "Sauer", role = "ctb",
+                     email = "sauer.alexander@gmx.de"))
 Author: Thilo Klein [aut, cre],
-  Sven Giegerich [ctb]
+  Sven Giegerich [ctb],
+  Alexander Sauer [ctb]
 Maintainer: Thilo Klein <thilo@klein.uk>
 Description: Implements structural estimators to correct for
     the sample selection bias from observed outcomes in matching
@@ -26,8 +29,9 @@ Description: Implements structural estimators to correct for
 URL: http://matchingMarkets.org, http://klein.uk
 BugReports: https://github.com/thiloklein/matchingMarkets/issues
 License: GPL (>= 2)
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
+Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2018-02-23 20:32:58 UTC; thilo
+Packaged: 2018-10-23 07:05:48 UTC; thilo
 Repository: CRAN
-Date/Publication: 2018-02-23 22:36:37 UTC
+Date/Publication: 2018-10-23 07:40:03 UTC

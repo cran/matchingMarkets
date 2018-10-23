@@ -4,9 +4,10 @@
 \alias{hri}
 \title{All stable matchings in the hospital/residents problem with incomplete lists}
 \usage{
-hri(nStudents = ncol(s.prefs), nColleges = ncol(c.prefs), nSlots = rep(1,
-  nColleges), s.prefs = NULL, c.prefs = NULL, seed = NULL,
-  s.range = NULL, c.range = NULL, ...)
+hri(nStudents = ncol(s.prefs), nColleges = ncol(c.prefs),
+  nSlots = rep(1, nColleges), s.prefs = NULL, c.prefs = NULL,
+  s.range = NULL, c.range = NULL, randomization = NULL,
+  seed = NULL, check_consistency = FALSE, ...)
 }
 \arguments{
 \item{nStudents}{integer indicating the number of students (in the college admissions problem) 
@@ -26,8 +27,6 @@ preference (i.e. most preferred first).}
 column containing college \code{i}'s ranking over students in decreasing order of 
 preference (i.e. most preferred first).}
 
-\item{seed}{integer setting the state for random number generation.}
-
 \item{s.range}{range of two intergers \code{s.range = c(s.min, s.max)}, where \code{s.min < s.max}. 
 Produces incomplete preference lists with the length of each student's list randomly sampled from 
 the range \code{[s.min, s.max]}. Note: interval is only correct if either c.range or s.range is used.}
@@ -35,6 +34,12 @@ the range \code{[s.min, s.max]}. Note: interval is only correct if either c.rang
 \item{c.range}{range of two intergers \code{c.range = c(c.min, c.max)}, where \code{c.min < c.max}. 
 Produces incomplete preference lists with the length of each college's list randomly sampled from 
 the range \code{[c.min, c.max]}. Note: interval is only correct if either c.range or s.range is used.}
+
+\item{randomization}{determines at which level random lottery numbers for student priorities are drawn. The default is \code{randomization = "multiple"}, where a student's priority is determined by a separate lottery at each college (i.e. local tie-breaking). For the second variant, \code{randomization = "single"}, a single lottery number determines a student's priority at all colleges (i.e. global tie breaking).}
+
+\item{seed}{integer setting the state for random number generation.}
+
+\item{check_consistency}{Performs consicentcy checks (Checks if there are columns in the preference matrices that only contains zeros and drops them and checks the matrixes for consistencies if they are given by characters). Defaults to \code{TRUE} but changing it to \code{FALSE} might reduce the running-time for large problems.}
 
 \item{...}{.}
 }
@@ -71,15 +76,23 @@ either given or randomly generated preferences.
 }
 
 \examples{
+\dontrun{
 ## -----------------------
 ## --- Marriage problem 
 
-## 3 men, 2 women, random preferences:
+## 7 men, 6 women, random preferences:
  hri(nStudents=7, nColleges=6, seed=4)
 
 ## 3 men, 2 women, given preferences:
  s.prefs <- matrix(c(1,2, 1,2, 1,2), 2,3)
  c.prefs <- matrix(c(1,2,3, 1,2,3), 3,2)
+ hri(s.prefs=s.prefs, c.prefs=c.prefs)
+
+## 3 men, 2 women, given preferences:
+ s.prefs <- matrix(c("x","y", "x","y", "x","y"), 2,3)
+ colnames(s.prefs) <- c("A","B","C")
+ c.prefs <- matrix(c("A","B","C", "A","B","C"), 3,2)
+ colnames(c.prefs) <- c("x","y")
  hri(s.prefs=s.prefs, c.prefs=c.prefs)
 
 ## --------------------------------
@@ -93,17 +106,26 @@ either given or randomly generated preferences.
  c.prefs <- matrix(c(1,2,3,4,5,6,7, 1,2,3,4,5,NA,NA), 7,2)
  hri(s.prefs=s.prefs, c.prefs=c.prefs, nSlots=c(3,3))
  
+## 7 students, 2 colleges with 3 slots each, given preferences:
+ s.prefs <- matrix(c("x","y", "x","y", "x",NA, "x","y", 
+                     "x","y", "x","y", "x","y"), 2,7)
+ colnames(s.prefs) <- c("A","B","C","D","E","F","G")
+ c.prefs <- matrix(c("A","B","C","D","E","F","G", 
+                     "A","B","C","D","E",NA,NA), 7,2)
+ colnames(c.prefs) <- c("x","y")
+ hri(s.prefs=s.prefs, c.prefs=c.prefs, nSlots=c(3,3))
+ 
 ## 7 students, 3 colleges with 3 slots each, incomplete preferences:
  hri(nStudents=7, nSlots=c(3,3,3), seed=21, s.range=c(1,3))
  
 ## --------------------
 ## --- Summary plots
-\dontrun{
+
 ## 200 students, 200 colleges with 1 slot each
  res <- hri(nStudents=200, nColleges=200, seed=12)
  plot(res)
  plot(res, energy=TRUE)
- }
+}
 }
 \references{
 Gale, D. and L.S. Shapley (1962). College admissions and the stability 
