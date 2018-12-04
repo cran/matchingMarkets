@@ -1,5 +1,5 @@
 Package: matchingMarkets
-Version: 0.3-6
+Version: 1.0-0
 Depends: R (>= 3.0.2)
 Imports: Rcpp (>= 0.12.12), RcppProgress (>= 0.2), rJava, lpSolve,
         lattice, partitions, parallel, stats, utils
@@ -32,6 +32,6 @@ License: GPL (>= 2)
 RoxygenNote: 6.1.0
 Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2018-10-23 07:05:48 UTC; thilo
+Packaged: 2018-12-04 08:51:20 UTC; thilo
 Repository: CRAN
-Date/Publication: 2018-10-23 07:40:03 UTC
+Date/Publication: 2018-12-04 10:20:14 UTC

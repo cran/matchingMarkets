@@ -1,10 +1,16 @@
 
-# matchingMarkets 0.3-6
+# matchingMarkets 1.0-0
 
 Please note that only the most significant changes are reported here.
 A full ChangeLog is available in the log messages of the SVN repository
 on [R-Forge](https://r-forge.r-project.org/scm/viewvc.php/?root=matchingmarkets)
 and on [GitHub](https://github.com/thiloklein/matchingMarkets).
+
+This is a major update
+
+* Finalised estimators in `stabit2` function, as well as algorithms in `hri` and `hri2` for two-sided matching markets.
+
+# matchingMarkets 0.3-6
 
 This is a minor update
 

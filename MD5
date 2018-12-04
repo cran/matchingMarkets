@@ -1,8 +1,8 @@
-dab7b560f22dcad6e772c2a2fb71c5ed *DESCRIPTION
+58e2327faa74dc8cfaa9551d9beba415 *DESCRIPTION
 05949681e9082cdc318ab360fdae486b *NAMESPACE
-06a0a7d7d8506fa77f1cde00ebb03064 *NEWS.md
-b978fd990fa2e09c89b1f74efcfffe80 *R/RcppExports.R
-0bc581c18b728ffdb0512ec567557368 *R/hri.R
+f0ea73b3fa1881a9e283f4bdda74abbe *NEWS.md
+04813dbfbb836a799669c4f5ae7f776a *R/RcppExports.R
+2369e8822397ca9cac9a7be4ac27e2a4 *R/hri.R
 1b7951aca388cb43aa252e16dec6bd43 *R/hri2.R
 026ccf20668d2c904314000fa16d839b *R/iaa.R
 08659c4c27b8a943081f8564fd0e02bb *R/khb.R
@@ -17,7 +17,7 @@ f5c2f697718490e0c916fed1b87e3f8d *R/rsd.R
 516363a86c819a787b59e3b54152cd3f *R/sri.R
 a6d0689652b20991f06f4575f3b70bd9 *R/stabchk.R
 18d7912c1875b8184f0891ba61e98141 *R/stabit.R
-ed75831b961224cd9c29dd6d3fc82316 *R/stabit2.R
+14a0dafea2cd11d3c183536f64993a9a *R/stabit2.R
 cbea3fa36a8d60dc54f564fb2528ac26 *R/stabsim.R
 fa7d2ac82220d6ca4f9a0a92d8dfeafe *R/stabsim2.R
 41aada8adaab8b46ceaabee9f523d814 *R/summary.hri2.R
@@ -25,7 +25,7 @@ e3c1b3e37aeaab487241f9821259be12 *R/summary.stabit2.R
 1b879b335c0b51c400512456d5830d40 *R/ttc.R
 cee6160b89e55e85cd7308a9158ef286 *R/ttc2.R
 abcea99ac53c1512425de61f9ee2b4d9 *R/ttcc.R
-130625da7efd93a6f52e63ccdf214307 *README.md
+49dccfca85181349dd49b6f5d6b92e04 *README.md
 9b65af4aa939a49198aa4bdb466e153f *build/vignette.rds
 68c9b79f3ae07ef12ba91d02b76b985b *data/baac00.RData
 ac8b3ec925ff85434549261b6843538d *data/datalist
@@ -33,7 +33,7 @@ ac8b3ec925ff85434549261b6843538d *data/datalist
 1fa2cf4e3a3fbee5e835715d841731be *data/klein15b.RData
 50db65a72f8a4be86c1bf687464562b8 *inst/CITATION
 d6fe87eda561462597cb4f95b522c6c7 *inst/doc/matching.Rnw
-7b04432937ec9910997acc03465cdd14 *inst/doc/matching.pdf
+8cfbb0c1dea2d073e28cf068c6c4a6c0 *inst/doc/matching.pdf
 cf060d8e06ef1ab045021e6e59c4ef0b *inst/include/IntMap.h
 1eca8531afc59b7f0ab8a5d4e1639680 *inst/include/IntTypes.h
 6834c154e4ac3d307db39313e0c3f503 *inst/include/Options.h
@@ -55,13 +55,13 @@ d6aecf0ccf195b802572af9e4b317c19 *inst/java/smi.jar
 4867f86bc9fddacb8cc317218502cfd6 *java/SRN.java
 ff026933f8fc1970b110500259ba0a46 *java/smi.java
 282e3671987df54237fc17995bbe4cb7 *man/baac00.Rd
-dfd7b1967f43f7a2d0199365c8f93fee *man/hri.Rd
+d7e5ef11d9c385beb3dba6e868699005 *man/hri.Rd
 04a01ed0d85a297ae519fdb7c54c3aee *man/hri2.Rd
 692dd2683713f4e87c417a3b87198b7d *man/iaa.Rd
 4385c43c89d5995ac3ff6f3e6971dea8 *man/khb.Rd
 0d8ddd21baf091a927f63b4ddcd09df8 *man/klein15a.Rd
 46768e50cafd5bed7f69f4cf64bc9b75 *man/klein15b.Rd
-a1b0960ab5f4ef0828708ab1e8a807f9 *man/matchingMarkets-package.Rd
+ecb246ca56b0868879aed156e4dca152 *man/matchingMarkets-package.Rd
 31a638ff18e2d56ecc883f3a41476334 *man/mce.Rd
 8c4d2aa961d153db260a1bf3b4659da2 *man/plp.Rd
 b6ec12fd711c4c21ea18bce5639611ae *man/predict.stabit2.Rd
@@ -78,7 +78,7 @@ cb7d054be7bdb2a6ef27da318b0dfc4c *man/ttcc.Rd
 c69e7404615af8962035d58bf3d0ab91 *src/Makevars
 c69e7404615af8962035d58bf3d0ab91 *src/Makevars.win
 f9643ccd249efc036f40581c0a952088 *src/Options.cc
-0b7af2d35b22fa8764e708b00d3a2f22 *src/RcppExports.cpp
+9e8e2508a5a71bd462f73e7be58105a0 *src/RcppExports.cpp
 99e9d15103eead1fca20c2e442019554 *src/System.cc
 40b95d0f28feabf0e3810daffc4ac1a4 *src/kprmatcher.cc
 60ee54bb42f3eb828c887aab7b2d0e3d *src/params.cc
@@ -86,8 +86,10 @@ f9643ccd249efc036f40581c0a952088 *src/Options.cc
 b1e5f1fe45ffa9137fd863d9ee0e8124 *src/rcp.cc
 e06f6185a800d3f2cdf0558c214d4d23 *src/rpmatcher.cc
 146c51faaacd323f0ec75b67a7963d6a *src/runMatch.cpp
-9daf30a65ae832338245edfcc64b042b *src/stabit2Mat1.cpp
-9cfd65838812693bdf9fc964af0d7398 *src/stabit2Sel1.cpp
+401235b14c94e3a26618c10943ebb7e6 *src/stabit2Mat0.cpp
+392fd2f65a7b4478928d54c5413e2e49 *src/stabit2Mat1.cpp
+fc46c649134fe5a963e1a8152819c0d1 *src/stabit2Sel0.cpp
+7f8f614d4f2372c6b73180302d2657a4 *src/stabit2Sel1.cpp
 63333ebed500bcf80fd2e23890980df0 *src/stabit2Sel2.cpp
 a66f575c6803f2a441035003adbfea22 *src/stabitSel2.cpp
 ab116fcde8eefcd519a68ee971b9c5c2 *vignettes/Sections/1_Introduction.tex
