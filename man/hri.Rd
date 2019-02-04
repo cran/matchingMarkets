@@ -122,8 +122,10 @@ either given or randomly generated preferences.
                      'S3', 'S1', NA,
                      'S1', NA, NA,
                       NA, NA,NA,
-                     'S2', 'S1', 'S3'),
+                     'S2', 'S1', 'S5'),
                    nrow = 3, ncol = 5)
+ # Note that we explicitly allow for the existence of entries refering to colleges
+ # that do not exist. A warning is generated and the entry is ignored.
  colnames(s.prefs) <- c('A', 'B', 'C', 'D', 'E')
  c.prefs <- matrix(c('B', 'C','D', 'A',
                      'C', 'D', NA, NA, 

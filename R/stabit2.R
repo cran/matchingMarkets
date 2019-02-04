@@ -193,6 +193,9 @@ stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, ou
     method <- "Sorensen" # single selection equation with equal sharing rule for student and college utility
   }
   
+  s.prefs <- NULL
+  c.prefs <- NULL
+  
   if(!is.data.frame(SEL)){
     SELs <- SEL$SELs
     SELc <- SEL$SELc
