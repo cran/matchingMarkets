@@ -1,5 +1,5 @@
 Package: matchingMarkets
-Version: 1.0-1
+Version: 1.0-2
 Depends: R (>= 3.0.2)
 Imports: Rcpp (>= 0.12.12), RcppProgress (>= 0.2), rJava, lpSolve,
         lattice, partitions, parallel, stats, utils
@@ -32,9 +32,9 @@ Description: Implements structural estimators to correct for
 URL: http://matchingMarkets.org, http://klein.uk
 BugReports: https://github.com/thiloklein/matchingMarkets/issues
 License: GPL (>= 2)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2019-02-04 21:41:22 UTC; thilo
+Packaged: 2019-12-14 22:24:25 UTC; thilo
 Repository: CRAN
-Date/Publication: 2019-02-04 22:40:02 UTC
+Date/Publication: 2020-01-12 10:00:02 UTC
