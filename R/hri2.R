@@ -7,7 +7,7 @@
 # ----------------------------------------------------------------------------
 #
 #' @title Resident-optimal matching in the hospital/residents problem with couples
-#' @description Implements the Roth Peranson matching algorithm for the \href{https://en.wikipedia.org/wiki/National_Resident_Matching_Program}{hospital/residents problem with couples} as described in Roth and Peranson (1999). The function is based on an adoption of Bacchus (2018). 
+#' @description Implements the Roth Peranson matching algorithm for the \href{https://en.wikipedia.org/wiki/National_Resident_Matching_Program}{hospital/residents problem with couples} as described in Roth and Peranson (1999). The function is based on an adoption of Bacchus (2018) and the SAT-solver of Sorenssen (2013). 
 #' @param nStudents integer indicating the number of students (in the college admissions problem) 
 #' or men (in the stable marriage problem) in the market. Defaults to \code{ncol(s.prefs)}.
 #' @param nColleges integer indicating the number of colleges (in the college admissions problem) 
@@ -28,6 +28,7 @@
 #' @param randomization determines at which level and in which order random lottery numbers for student priorities are drawn. The default is \code{randomization = "multiple"}, where a student's priority is determined by a separate lottery at each college (i.e. local tie-breaking). For the second variant, \code{randomization = "single"}, a single lottery number determines a student's priority at all colleges (i.e. global tie breaking). A third variant is common in the context of course allocation, where a "couple" represents a student who submits a preference ranking over single courses (first course) and combinations of courses (first and second course). Here, the option \code{randomization = "single-course-first"} gives applications for a student's single courses strictly higher priority than for course combinations. This ensures the fairness criterion that a student is only assigned a second course after single course applications of all students have been considered.
 #' @param seed integer setting the state for random number generation. 
 #' @param check_consistency Performs additional consicentcy checks if the preference matrices are given by characters. Defaults to \code{FALSE}. Set to \code{FALSE} to reduce run-time.
+#' @param verbose logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.
 #' @param ... .
 #' 
 #' @export
@@ -44,12 +45,11 @@
 #' \item{\code{s.prefs, c.prefs, co.prefs, nSlots}}{Residence hospital problem with couples and given preferences.}
 #' }
 #' 
-#' @return
-#' \code{hri2} returns a list of the following elements:
+#' @return \code{hri2} returns a list of the following elements:
 #' \item{matchings}{List of matched students and colleges.}
 #' \item{summary}{Detailed report of the matching result, including futher information on ranks.}
 #' 
-#' @author Sven Giegerich, Thilo Klein
+#' @author Fahiem Bacchus, Sven Giegerich, Thilo Klein, Niklas Sorensson
 #' 
 #' @keywords algorithms
 #' 
@@ -62,12 +62,13 @@
 #' 
 #' Kojima, F., Pathak, P. A., & Roth, A. E. (2013). Matching with couples: Stability and incentives in large markets. \emph{The Quarterly Journal of Economics}, 128(4), 1585-1632.
 #' 
+#' Sorenssen, N. (2013). minisat. GitHub repository.
+#' 
 #' @examples
-#' \dontrun{
 #' ## Example with given preferences
-#' (s.prefs <- matrix(c(4,2,3,5, 2,1,3,NA, 1,2,3,4), 4,3))
-#' (c.prefs <- matrix(rep(1:5,5), 5,5))
-#' (co.prefs <- matrix(c(rep(4,3), rep(5,3), 3,3,NA, 3,NA,3), 3,4))
+#' s.prefs <- matrix(c(4,2,3,5, 2,1,3,NA, 1,2,3,4), 4,3)
+#' c.prefs <- matrix(rep(1:5,5), 5,5)
+#' co.prefs <- matrix(c(rep(4,3), rep(5,3), 3,3,NA, 3,NA,3), 3,4)
 #' res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, nSlots=rep(1,5))
 #' res$matchings
 #' # summary(res)
@@ -111,15 +112,14 @@
 #' res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, 
 #'             nSlots=c(2,1,1))                     
 #' res$matching
-#' }                                                                                
 
 
 hri2 <- function(nStudents=ncol(s.prefs), nColleges=ncol(c.prefs), nSlots=rep(1,nColleges), nCouples=ncol(co.prefs), 
-                 s.prefs=NULL, c.prefs=NULL, co.prefs=NULL, randomization="multiple", seed=NULL, check_consistency=TRUE, ...) UseMethod("hri2")
+                 s.prefs=NULL, c.prefs=NULL, co.prefs=NULL, randomization="multiple", seed=NULL, check_consistency=TRUE, verbose = FALSE, ...) UseMethod("hri2")
 
 #' @export
 hri2.default <- function(nStudents=ncol(s.prefs), nColleges=ncol(c.prefs), nSlots=rep(1,nColleges), nCouples=ncol(co.prefs), 
-                         s.prefs=NULL, c.prefs=NULL, co.prefs=NULL, randomization="multiple", seed=NULL, check_consistency=TRUE,...){
+                         s.prefs=NULL, c.prefs=NULL, co.prefs=NULL, randomization="multiple", seed=NULL, check_consistency=TRUE, verbose = FALSE,...){
   
   ## -------------------------------------------------------
   ## --- 1. consistency checks:  ---------------------------
@@ -145,7 +145,7 @@ hri2.default <- function(nStudents=ncol(s.prefs), nColleges=ncol(c.prefs), nSlot
     prefs_as_char <- TRUE
     
     # Check for consistency
-    if(check_consistency){consistency_check(s.prefs, c.prefs, co.prefs)}
+    if(check_consistency){consistency_check(s.prefs, c.prefs, co.prefs, verbose)}
     
     #Check if the co.prefs matrix represents real couples or preferences over two subjects
     kurs_pref <- ifelse(is.null(co.prefs), FALSE, all(co.prefs[,1] == co.prefs[,2]))
@@ -347,7 +347,7 @@ copL2copW <- function(couplesPref) {
 }
 
 
-consistency_check <- function(s.prefs, c.prefs, co.prefs){
+consistency_check <- function(s.prefs, c.prefs, co.prefs, verbose){
   # Check if student names are unique:
   if(length(unique(colnames(s.prefs))) != ncol(s.prefs)) {stop('Student names not unique')}
   if(length(intersect(colnames(s.prefs), unique(as.character(co.prefs[,c(1,2)])))) != 0) { stop('Student appears in s.prefs and co.prefs')}
@@ -381,7 +381,9 @@ consistency_check <- function(s.prefs, c.prefs, co.prefs){
     if( !all(apply(co.prefs, 1, function(row){return(row[1] != row[2]) })
     )) { stop('Some rows in co.prefs have the same student as participant one and two.')}
   }
-  print('Input passed consistency test!')
+  if(verbose == TRUE){
+    print('Input passed consistency test!')
+  }
 }
 
 

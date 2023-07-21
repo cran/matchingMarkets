@@ -75,7 +75,14 @@ market- and group-identifiers.}
 
 \item{niter}{number of iterations to use for the Gibbs sampler.}
 
-\item{verbose}{.}
+\item{verbose}{logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.}
+}
+\value{
+\code{stabit} returns for \code{method = "model.frame"}, a list of data from a NTU or TU matching market with the following elements.
+\item{OUT}{Model matrix of the outcome data, where \code{m.id} and \code{g.id} are categorical variables for market and group identifier.}
+\item{SEL}{Model matrix of the selection data, again with categorical variables \code{m.id} and \code{g.id} for market and group identifier.}
+\item{combs}{List of length of the number of markets with each element containing a matrix of all counterfactual group constellations in a market.}
+For any other setting of \code{method}, a list of the estimation results is returned.
 }
 \description{
 The function provides a Gibbs sampler for a structural matching model that 
@@ -147,7 +154,7 @@ Operators for variable transformations in \code{selection} and \code{outcome} ar
 }
 }
 \examples{
-\dontrun{
+\donttest{
 ## --- SIMULATED EXAMPLE ---
 
 ## 1. Simulate one-sided matching data for 200 markets (m=200) with 2 groups
@@ -204,7 +211,7 @@ eta <- lm.sel$resid[mdata$SEL$D==1]
 ## --- REPLICATION, Klein (2015a) ---
 
 ## 1. Load data 
- data(baac00); head(baac00)
+ data(baac00)
  
 ## 2. Run Gibbs sampler
  klein15a <- stabit(x=baac00, selection = list(inv="pi",ieq="wst"), 

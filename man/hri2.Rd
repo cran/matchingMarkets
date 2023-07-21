@@ -15,6 +15,7 @@ hri2(
   randomization = "multiple",
   seed = NULL,
   check_consistency = TRUE,
+  verbose = FALSE,
   ...
 )
 }
@@ -49,6 +50,8 @@ preference by rows (i.e. most preferred first).}
 
 \item{check_consistency}{Performs additional consicentcy checks if the preference matrices are given by characters. Defaults to \code{FALSE}. Set to \code{FALSE} to reduce run-time.}
 
+\item{verbose}{logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.}
+
 \item{...}{.}
 }
 \value{
@@ -57,7 +60,7 @@ preference by rows (i.e. most preferred first).}
 \item{summary}{Detailed report of the matching result, including futher information on ranks.}
 }
 \description{
-Implements the Roth Peranson matching algorithm for the \href{https://en.wikipedia.org/wiki/National_Resident_Matching_Program}{hospital/residents problem with couples} as described in Roth and Peranson (1999). The function is based on an adoption of Bacchus (2018).
+Implements the Roth Peranson matching algorithm for the \href{https://en.wikipedia.org/wiki/National_Resident_Matching_Program}{hospital/residents problem with couples} as described in Roth and Peranson (1999). The function is based on an adoption of Bacchus (2018) and the SAT-solver of Sorenssen (2013).
 }
 \section{Minimum required arguments}{
 
@@ -70,11 +73,10 @@ Implements the Roth Peranson matching algorithm for the \href{https://en.wikiped
 }
 
 \examples{
-\dontrun{
 ## Example with given preferences
-(s.prefs <- matrix(c(4,2,3,5, 2,1,3,NA, 1,2,3,4), 4,3))
-(c.prefs <- matrix(rep(1:5,5), 5,5))
-(co.prefs <- matrix(c(rep(4,3), rep(5,3), 3,3,NA, 3,NA,3), 3,4))
+s.prefs <- matrix(c(4,2,3,5, 2,1,3,NA, 1,2,3,4), 4,3)
+c.prefs <- matrix(rep(1:5,5), 5,5)
+co.prefs <- matrix(c(rep(4,3), rep(5,3), 3,3,NA, 3,NA,3), 3,4)
 res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, nSlots=rep(1,5))
 res$matchings
 # summary(res)
@@ -118,7 +120,6 @@ co.prefs <- matrix(c(col12,col3,col4), ncol = 4)
 res <- hri2(s.prefs=s.prefs, c.prefs=c.prefs, co.prefs=co.prefs, 
             nSlots=c(2,1,1))                     
 res$matching
-}                                                                                
 }
 \references{
 Bacchus, F. (2018). Stable matching suite. GitHub repository.
@@ -129,8 +130,10 @@ of marriage. \emph{The American Mathematical Monthly}, 69(1):9--15.
 Roth, A. E., & Peranson, E. (1999). The redesign of the matching market for American physicians: Some engineering aspects of economic design. \emph{American economic review}, 89(4), 748-780.
 
 Kojima, F., Pathak, P. A., & Roth, A. E. (2013). Matching with couples: Stability and incentives in large markets. \emph{The Quarterly Journal of Economics}, 128(4), 1585-1632.
+
+Sorenssen, N. (2013). minisat. GitHub repository.
 }
 \author{
-Sven Giegerich, Thilo Klein
+Fahiem Bacchus, Sven Giegerich, Thilo Klein, Niklas Sorensson
 }
 \keyword{algorithms}

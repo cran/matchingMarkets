@@ -9,6 +9,9 @@
 #' 
 #' @export
 #' 
+#' @return
+#' \code{predict.stabit2} returns a vector of predicted values for the latent outcome variable of an object of class \code{stabit}.
+#' 
 #' @author Thilo Klein 
 #' 
 #' @keywords summary

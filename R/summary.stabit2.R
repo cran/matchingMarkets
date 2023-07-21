@@ -93,9 +93,9 @@ summary.stabit2 <- function(object, mfx=FALSE, ...){
 
 mfxOut <- function(sims=10000, x.mean=TRUE, coefs, vcov, X, df){
   
-  ## source: http://researchrepository.ucd.ie/handle/10197/3404
+  ## source: https://researchrepository.ucd.ie/handle/10197/3404
   ## method: average of individual marginal effects at each observation
-  ## interpretation: http://www.indiana.edu/~statmath/stat/all/cdvm/cdvm.pdf page 8
+  ## interpretation: https://www.indiana.edu/~statmath/stat/all/cdvm/cdvm.pdf page 8
   
   set.seed(1984)
   se <- sqrt(diag(vcov))

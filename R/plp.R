@@ -10,7 +10,7 @@
 
 #' @title Partitioning Linear Programme for the stable roommates problem 
 #'
-#' @description Finds the stable matching in the \href{http://en.wikipedia.org/wiki/Stable_roommates_problem}{stable roommates problem} 
+#' @description Finds the stable matching in the \href{https://en.wikipedia.org/wiki/Stable_roommates_problem}{stable roommates problem} 
 #' with transferable utility. 
 #' Uses the Partitioning Linear Programme formulated in Quint (1991).
 #'

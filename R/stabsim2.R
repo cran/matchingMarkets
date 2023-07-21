@@ -35,10 +35,7 @@
 #' @import stats
 #' @importFrom utils setTxtProgressBar txtProgressBar
 #' 
-#' @return
-#' 
-#' @return
-#' \code{stabsim2} returns a list with the following items.
+#' @return \code{stabsim2} returns a list with the following items.
 #' \item{OUT}{}
 #' \item{SEL}{}
 #' \item{SELc}{}

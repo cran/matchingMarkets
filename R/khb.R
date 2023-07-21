@@ -22,6 +22,9 @@
 #' 
 #' @import stats
 #' 
+#' @return
+#' \code{khb} returns for all model coefficients the p-value for the null hypothesis that the change in coefficients is not attributable to confounding by z.
+#' 
 #' @author Thilo Klein 
 #' 
 #' @keywords summary

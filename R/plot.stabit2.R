@@ -18,29 +18,32 @@ plot.stabit2 <- function(x, ...){
     plotOut
   }
   
+  oldpar <- par(ask = FALSE)
+  on.exit(par(oldpar))
+  par(ask=TRUE)
   
   if(x$method=="Klein-selection"){
     
     plot( mcmcPlots(dat = x$draws$betadraws, main = "MCMC draws in college selection equation") )
-    par(ask=TRUE)
+    #par(ask=TRUE)
     plot( mcmcPlots(dat = x$draws$gammadraws, main = "MCMC draws in student selection equation") )
-    par(ask=FALSE)
+    #par(ask=FALSE)
     
   } else if(x$method=="Klein"){
     
     plot( mcmcPlots(dat = x$draws$alphadraws, main = "MCMC draws in outcome equation") )
-    par(ask=TRUE)
+    #par(ask=TRUE)
     plot( mcmcPlots(dat = x$draws$betadraws, main = "MCMC draws in college selection equation") )
-    par(ask=TRUE)
+    #par(ask=TRUE)
     plot( mcmcPlots(dat = x$draws$gammadraws, main = "MCMC draws in student selection equation") )
-    par(ask=FALSE)
+    #par(ask=FALSE)
     
   } else if(x$method %in% c("Sorensen","Selection")){
     
     plot( mcmcPlots(dat = x$draws$alphadraws, main = "MCMC draws in outcome equation") )
-    par(ask=TRUE)
+    #par(ask=TRUE)
     plot( mcmcPlots(dat = x$draws$betadraws, main = "MCMC draws in selection equation") )
-    par(ask=FALSE)
+    #par(ask=FALSE)
     
   } else if(x$method=="Outcome-only"){
     

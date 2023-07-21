@@ -3,7 +3,7 @@
 ## 1. Set parameters
 mciter <- 2 #500
 niter <- 10 #400000
-nodes <- 4
+nodes <- 2
 
 ## 2. Setup parallel backend to use 4 processors
 library(foreach); library(doSNOW)

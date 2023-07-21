@@ -14,6 +14,9 @@ predict. If omitted, the fitted linear predictors or the fitted response values 
 
 \item{...}{.}
 }
+\value{
+\code{predict.stabit2} returns a vector of predicted values for the latent outcome variable of an object of class \code{stabit}.
+}
 \description{
 Calculate predicted values for matching models fitted with functions \code{stabit} and \code{stabit2}.
 }

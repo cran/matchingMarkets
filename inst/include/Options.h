@@ -140,14 +140,14 @@ class DoubleOption : public Option
         if (!match(span, "-") || !match(span, name) || !match(span, "="))
             return false;
 
-        char*  end;
+        char* end;
         //SVEN
-        //double tmp = strtod(span, &end);
+        double tmp = strtod(span, &end);
         
         if (end == NULL) 
             return false;
         //SVEN
-        /*else if (tmp >= range.end && (!range.end_inclusive || tmp != range.end)){
+        else if (tmp >= range.end && (!range.end_inclusive || tmp != range.end)){
             fprintf(stderr, "ERROR! value <%s> is too large for option \"%s\".\n", span, name);
             exit(1);
         }else if (tmp <= range.begin && (!range.begin_inclusive || tmp != range.begin)){
@@ -156,13 +156,13 @@ class DoubleOption : public Option
 
         value = tmp;
          fprintf(stderr, "READ VALUE: %g\n", value);
-        */
+        
         return true;
     }
 
     virtual void help (bool verbose = false){
         //SVEN
-        /*fprintf(stderr, "  -%-12s = %-8s %c%4.2g .. %4.2g%c (default: %g)\n", 
+        fprintf(stderr, "  -%-12s = %-8s %c%4.2g .. %4.2g%c (default: %g)\n", 
                 name, type_name, 
                 range.begin_inclusive ? '[' : '(', 
                 range.begin,
@@ -172,7 +172,7 @@ class DoubleOption : public Option
         if (verbose){
             fprintf(stderr, "\n        %s\n", description);
             fprintf(stderr, "\n");
-        }*/
+        }
     }
 };
 
@@ -201,29 +201,29 @@ class IntOption : public Option
         if (!match(span, "-") || !match(span, name) || !match(span, "="))
             return false;
 
-        char*   end;
-        //int32_t tmp = strtol(span, &end, 10);
+        char* end;
+        int32_t tmp = strtol(span, &end, 10);
 
         if (end == NULL) 
             return false;
         //SVEN
-        /*
+        
         else if (tmp > range.end){
             fprintf(stderr, "ERROR! value <%s> is too large for option \"%s\".\n", span, name);
             exit(1);
         }else if (tmp < range.begin){
             fprintf(stderr, "ERROR! value <%s> is too small for option \"%s\".\n", span, name);
             exit(1); }
-         */
+         
 
-        //value = tmp;
+        value = tmp;
 
         return true;
     }
 
     virtual void help (bool verbose = false){
         //SVEN
-        /*
+        
         fprintf(stderr, "  -%-12s = %-8s [", name, type_name);
         if (range.begin == INT32_MIN)
             fprintf(stderr, "imin");
@@ -240,7 +240,7 @@ class IntOption : public Option
         if (verbose){
             fprintf(stderr, "\n        %s\n", description);
             fprintf(stderr, "\n");
-        }*/
+        }
     }
 };
 
@@ -268,45 +268,45 @@ class Int64Option : public Option
         if (!match(span, "-") || !match(span, name) || !match(span, "="))
             return false;
 
-        char*   end;
+        char* end;
         //SVEN
-        //int64_t tmp = strtoll(span, &end, 10);
+        int64_t tmp = strtoll(span, &end, 10);
 
         if (end == NULL) 
             return false;
         //SVEN
-        /*else if (tmp > range.end){
+        else if (tmp > range.end){
             fprintf(stderr, "ERROR! value <%s> is too large for option \"%s\".\n", span, name);
             exit(1);
         }else if (tmp < range.begin){
             fprintf(stderr, "ERROR! value <%s> is too small for option \"%s\".\n", span, name);
             exit(1); }
-        */
-        //value = tmp;
+        
+        value = tmp;
 
         return true;
     }
 
     virtual void help (bool verbose = false){
        //SVEN
-       /*
+       
         fprintf(stderr, "  -%-12s = %-8s [", name, type_name);
         if (range.begin == INT64_MIN)
             fprintf(stderr, "imin");
         else
-            fprintf(stderr, "%4" PRIi64, range.begin);
+            //fprintf(stderr, "%4" PRIi64, range.begin);
 
         fprintf(stderr, " .. ");
         if (range.end == INT64_MAX)
             fprintf(stderr, "imax");
-        else
-            fprintf(stderr, "%4" PRIi64, range.end);
+        //else
+           // fprintf(stderr, "%4" PRIi64, range.end);
 
-        fprintf(stderr, "] (default: %" PRIi64 ")\n", value);
+        //fprintf(stderr, "] (default: %" PRIi64 ")\n", value);
         if (verbose){
             fprintf(stderr, "\n        %s\n", description);
             fprintf(stderr, "\n");
-        }*/
+        }
     }
 };
 #endif
@@ -338,12 +338,12 @@ class StringOption : public Option
 
     virtual void help (bool verbose = false){
         //SVEN
-        /*
+        
         fprintf(stderr, "  -%-10s = %8s\n", name, type_name);
         if (verbose){
             fprintf(stderr, "\n        %s\n", description);
             fprintf(stderr, "\n");
-        }*/
+        }
     }    
 };
 
@@ -380,7 +380,7 @@ class BoolOption : public Option
 
     virtual void help (bool verbose = false){
         //SVEN
-        /*
+        
         fprintf(stderr, "  -%s, -no-%s", name, name);
 
         for (uint32_t i = 0; i < 32 - strlen(name)*2; i++)
@@ -391,7 +391,7 @@ class BoolOption : public Option
         if (verbose){
             fprintf(stderr, "\n        %s\n", description);
             fprintf(stderr, "\n");
-        }*/
+        }
     }
 };
 

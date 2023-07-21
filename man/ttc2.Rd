@@ -12,7 +12,8 @@ ttc2(
   nSlots = NULL,
   priority = NULL,
   seed = NULL,
-  full_return = FALSE
+  full_return = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ ttc2(
 \item{seed}{(Optional) integer setting the state for random number generation. Defaults to seed = NULL}
 
 \item{full_return}{(Optinal) If \code{TRUE} the return value is a list with the matching, the remaining seats and the unmatchable students is returned. Defaults to \code{FALSE} and only the matching is returned.}
+
+\item{verbose}{logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.}
 }
 \value{
 \code{ttc2} returns a data frame of the matching of students (ind) to colleges (obj) for the school market problem based on the Top-Trading-Cycles algorithm.
@@ -44,7 +47,6 @@ Now suppose during the matching process a student points to a college that still
 We assume now that the college is indifferent over all other students (so we do not allow for free capacieties) and we match the student who wants to go there to the college.
 }
 \examples{
-##\dontrun{
 ## 1-a. Compare example from the Abdulkadiroglu et al. (2003) (in the Appendix, page 742-744)
 ## 1-b. Generate matrix of students' preference rankings over schools, a.k.a. Rank Order Lists (ROL)
 s.prefs <- matrix(c(
@@ -56,7 +58,7 @@ s.prefs <- matrix(c(
                   4,1,2,3,
                   1,2,3,4,
                   1,2,4,3),
-                  byrow = FALSE, ncol = 8); s.prefs
+                  byrow = FALSE, ncol = 8)
 
 ## 1-c. Generate matrix of schools' preference rankings over students, a.k.a. Rank Order Lists (ROL)
 c.prefs <- matrix(c(
@@ -64,7 +66,7 @@ c.prefs <- matrix(c(
                   3,5,4,8,7,2,1,6,
                   5,3,1,7,2,8,6,4,
                   6,8,7,4,2,3,5,1),
-                  byrow = FALSE, ncol = 4); c.prefs
+                  byrow = FALSE, ncol = 4)
 
 ## 1-d. Generate capacities
 nSlots <- c(2,2,3,3)
@@ -78,7 +80,7 @@ c.prefs <- matrix(c(
                    3,5,4,8,7,2,1,6,
                    5,3,1,7,2,8,6,4,
                    6,8,7,4,2,3,5,1),
-                   byrow = FALSE, ncol = 4); c.prefs
+                   byrow = FALSE, ncol = 4)
 
 ## 2-b. Find assignment based on TTC algorithm
 ttc2(s.prefs = s.prefs, c.prefs = c.prefs, nSlots = nSlots, priority = 1:8)
@@ -95,10 +97,9 @@ c.prefs <- matrix(c(
                   byrow = FALSE, ncol = 4)
 priority <- c.prefs[,1]
 
-match_ttc <- ttc2(s.prefs = s.prefs, c.prefs = c.prefs, nSlots = nSlots); match_ttc
-match_sd <- rsd(prefs = s.prefs, priority = priority, nSlots = nSlots); match_sd
+match_ttc <- ttc2(s.prefs = s.prefs, c.prefs = c.prefs, nSlots = nSlots)
+match_sd <- rsd(prefs = s.prefs, priority = priority, nSlots = nSlots)
 all(match_ttc == match_sd)
-##}
 }
 \references{
 Abdulkadiroglu, A. and T. Sonmez (2003). School Choice: A Mechanism Design Approach. \emph{American Economic Review}, 93 (3): 729-747.

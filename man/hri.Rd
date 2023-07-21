@@ -15,6 +15,7 @@ hri(
   randomization = NULL,
   seed = NULL,
   check_consistency = TRUE,
+  verbose = FALSE,
   ...
 )
 }
@@ -50,6 +51,8 @@ the range \code{[c.min, c.max]}. Note: interval is only correct if either c.rang
 
 \item{check_consistency}{Performs consicentcy checks (Checks if there are columns in the preference matrices that only contains zeros and drops them and checks the matrixes for consistencies if they are given by characters). Defaults to \code{TRUE} but changing it to \code{FALSE} might reduce the running-time for large problems.}
 
+\item{verbose}{logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.}
+
 \item{...}{.}
 }
 \value{
@@ -64,9 +67,9 @@ college-optimal match (\code{cOptimal})}.
 }
 \description{
 Finds \emph{all} stable matchings in either the 
-\href{http://en.wikipedia.org/wiki/Hospital_resident}{hospital/residents} problem (a.k.a. college 
+\href{https://en.wikipedia.org/wiki/Hospital_resident}{hospital/residents} problem (a.k.a. college 
 admissions problem) or the related 
-\href{http://en.wikipedia.org/wiki/Stable_matching}{stable marriage} problem. 
+\href{https://en.wikipedia.org/wiki/Stable_matching}{stable marriage} problem. 
 Dependent on the problem, the results comprise the student and college-optimal or 
 the men and women-optimal matchings. The implementation allows for \emph{incomplete preference 
 lists} (some agents find certain agents unacceptable) and \emph{unbalanced instances} (unequal 
@@ -85,7 +88,6 @@ either given or randomly generated preferences.
 }
 
 \examples{
-\dontrun{
 ## -----------------------
 ## --- Marriage problem 
 
@@ -133,6 +135,7 @@ either given or randomly generated preferences.
                       NA, NA,NA,
                      'S2', 'S1', 'S5'),
                    nrow = 3, ncol = 5)
+ 
  # Note that we explicitly allow for the existence of entries refering to colleges
  # that do not exist. A warning is generated and the entry is ignored.
  colnames(s.prefs) <- c('A', 'B', 'C', 'D', 'E')
@@ -141,10 +144,14 @@ either given or randomly generated preferences.
                      'D', 'B', 'A', 'E'),
                    nrow = 4, ncol = 3)
  colnames(c.prefs) <- c('S1', 'S2', 'S3')
+ \donttest{
  hri(s.prefs=s.prefs, c.prefs=c.prefs, nSlots=c(3,3,3), check_consistency = TRUE)
+ }
+ 
 ## --------------------
 ## --- Summary plots
 
+\donttest{
 ## 200 students, 200 colleges with 1 slot each
  res <- hri(nStudents=200, nColleges=200, seed=12)
  plot(res)

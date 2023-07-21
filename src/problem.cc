@@ -367,7 +367,7 @@ string Problem::summaryMatch(bool fndMatch) {
   
   buffer << "#Single Residents:" << std::endl;
   
-  for(const auto&r : Res()) 
+  for(const auto&r : Res()){ 
     if(!r.inCouple()) {
       buffer << "#Resident " << r.id() << ": ";
       buffer << "match = " << r.matchedTo() << " Res Ranking = "
@@ -383,70 +383,74 @@ string Problem::summaryMatch(bool fndMatch) {
         ++resGotTopRank;
       
     }
+  }
     
-    buffer << "\n#Couples:" << std::endl;
-    for(const auto&c : Cpl()) {
-      buffer << "#Couple " << c.id() << ": ";
-      buffer << "match = " << c.matchedTo() << " Cpl Ranking = "
+  buffer << "\n#Couples:" << std::endl;
+  for(const auto&c : Cpl()) {
+    buffer << "#Couple " << c.id() << ": ";
+    buffer << "match = " << c.matchedTo() << " Cpl Ranking = "
            << c.rankOf(c.matchedTo()) << "/" << c.rol().size() << std::endl;
-      if(!c.isMatched())
-        ++cplNotMatched;
-      else
-        cplAveRank += c.rankOf(c.matchedTo());      
-      
-      if(c.rankOf(c.matchedTo()) == 0)
-        ++cplGotTopRank;
+    if(!c.isMatched())
+      ++cplNotMatched;
+    else
+      cplAveRank += c.rankOf(c.matchedTo());      
+    
+    if(c.rankOf(c.matchedTo()) == 0)
+      ++cplGotTopRank;
+  }
+    
+  int matchedProgs {0};
+  buffer << "\n#Programs:" << std::endl;
+  for(const auto&p : Prog()) {
+    buffer << "#Program " << p.id() << ": ";
+    buffer << "spares = " << p.quota() - p.accepted().size();
+    progSpareCap += p.quota() - p.accepted().size();
+    buffer << " accepted = [";
+    for(const auto &res : p.accepted()) 
+      buffer << res << " ";
+    buffer << "] " << " Prog rankings = [";
+    double aveRank {0};
+    for(const auto &res : p.accepted()) {
+      buffer << p.rankOf(res) << " ";
+      aveRank += p.rankOf(res);
+      if(p.rankOf(res) == 0)
+        ++prgGotTopRank;
     }
-    
-    int matchedProgs {0};
-    buffer << "\n#Programs:" << std::endl;
-    for(const auto&p : Prog()) {
-      buffer << "#Program " << p.id() << ": ";
-      buffer << "spares = " << p.quota() - p.accepted().size();
-      progSpareCap += p.quota() - p.accepted().size();
-      buffer << " accepted = [";
-      for(const auto &res : p.accepted()) 
-        buffer << res << " ";
-      buffer << "] " << " Prog rankings = [";
-      double aveRank {0};
-      for(const auto &res : p.accepted()) {
-        buffer << p.rankOf(res) << " ";
-        aveRank += p.rankOf(res);
-        if(p.rankOf(res) == 0)
-          ++prgGotTopRank;
-      }
-      buffer << "]" << "/" << p.rol().size();
-      if(p.accepted().size() > 0) {
-        prgAveRank += aveRank/p.accepted().size();
-        ++matchedProgs;
-        buffer << " ave Prog rank (accepted) = " << aveRank/p.accepted().size();
-      }
-      buffer << std::endl;
+    buffer << "]" << "/" << p.rol().size();
+    if(p.accepted().size() > 0) {
+      prgAveRank += aveRank/p.accepted().size();
+      ++matchedProgs;
+      buffer << " ave Prog rank (accepted) = " << aveRank/p.accepted().size();
     }
-    
-    buffer << "\n#Matching Summary Stats:" << std::endl;
-    buffer << "#Unmatched Singles: " << resNotMatched << std::endl;
-    buffer << "#Unmatched Couples: " << cplNotMatched << std::endl;
-    buffer << "#Unmatched Program slots: " << progSpareCap << std::endl;
-    
-    if(nSingRes-resNotMatched > 0)
-      buffer << "#Ave Resident Rank of their matching = "
+    buffer << std::endl;
+  }
+  
+  buffer << "\n#Matching Summary Stats:" << std::endl;
+  buffer << "#Unmatched Singles: " << resNotMatched << std::endl;
+  buffer << "#Unmatched Couples: " << cplNotMatched << std::endl;
+  buffer << "#Unmatched Program slots: " << progSpareCap << std::endl;
+  
+  if(nSingRes-resNotMatched > 0){
+    buffer << "#Ave Resident Rank of their matching = "
            << resAveRank/(nSingRes-resNotMatched) << std::endl;
-      buffer << "#Num Residents getting their top rank = "
+    buffer << "#Num Residents getting their top rank = "
            << resGotTopRank << std::endl;
-      
-      if(Cpl().size() - cplNotMatched > 0)
-        buffer << "#Ave Couple Rank of their matching = "
-             << cplAveRank/(Cpl().size()-cplNotMatched) << std::endl;
-        buffer << "#Num Couples getting their top rank = "
-             << cplGotTopRank << std::endl;
-        
-        if(matchedProgs > 0) 
-          buffer << "#Ave Program Rank of their matched residents "
-               << prgAveRank/matchedProgs << std::endl;
-          buffer << "#Num Programs getting their top rank = "
-               << prgGotTopRank;
-          buffer << std::endl;
+  }
+
+  if(Cpl().size() - cplNotMatched > 0){
+    buffer << "#Ave Couple Rank of their matching = "
+           << cplAveRank/(Cpl().size()-cplNotMatched) << std::endl;
+    buffer << "#Num Couples getting their top rank = "
+           << cplGotTopRank << std::endl;
+  }
+  
+  if(matchedProgs > 0){ 
+    buffer << "#Ave Program Rank of their matched residents "
+           << prgAveRank/matchedProgs << std::endl;
+    buffer << "#Num Programs getting their top rank = "
+           << prgGotTopRank;
+    buffer << std::endl;
+  }
   
   return buffer.str();
 }
@@ -465,7 +469,7 @@ Rcpp::List Problem::getStats(bool fndMatch) {
   double cplAveRank {0};
   double prgAveRank {0};
   
-  for(const auto&r : Res()) 
+  for(const auto&r : Res()){
     if(!r.inCouple()) {
       nSingRes++;
       if(!r.isMatched()) {
@@ -478,31 +482,32 @@ Rcpp::List Problem::getStats(bool fndMatch) {
         ++resGotTopRank;
       
     }
+  }
+  
+  for(const auto&c : Cpl()) {
+    if(!c.isMatched())
+      ++cplNotMatched;
+    else
+      cplAveRank += c.rankOf(c.matchedTo());      
     
-    for(const auto&c : Cpl()) {
-      if(!c.isMatched())
-        ++cplNotMatched;
-      else
-        cplAveRank += c.rankOf(c.matchedTo());      
-      
-      if(c.rankOf(c.matchedTo()) == 0)
-        ++cplGotTopRank;
-    }
+    if(c.rankOf(c.matchedTo()) == 0)
+      ++cplGotTopRank;
+  }
     
-    int matchedProgs {0};
-    for(const auto&p : Prog()) {
-      progSpareCap += p.quota() - p.accepted().size();
-      double aveRank {0};
-      for(const auto &res : p.accepted()) {
-        aveRank += p.rankOf(res);
-        if(p.rankOf(res) == 0)
-          ++prgGotTopRank;
-      }
-      if(p.accepted().size() > 0) {
-        prgAveRank += aveRank/p.accepted().size();
-        ++matchedProgs;
-      }
+  int matchedProgs {0};
+  for(const auto&p : Prog()) {
+    progSpareCap += p.quota() - p.accepted().size();
+    double aveRank {0};
+    for(const auto &res : p.accepted()) {
+      aveRank += p.rankOf(res);
+      if(p.rankOf(res) == 0)
+        ++prgGotTopRank;
     }
+    if(p.accepted().size() > 0) {
+      prgAveRank += aveRank/p.accepted().size();
+      ++matchedProgs;
+    }
+  }
   
   return Rcpp::List::create(Rcpp::Named("unmatchedSingles", resNotMatched),
                             Rcpp::Named("unmatchedCouples", cplNotMatched),
@@ -534,24 +539,24 @@ void Problem::printMatch(bool fndMatch, bool outputmatch) {
 
  Rcpp::Rcout << "#Single Residents:\n";
   
-  for(const auto&r : Res()) 
+  for(const auto&r : Res()){
     if(!r.inCouple()) {
-     Rcpp::Rcout << "#Resident " << r.id() << ": ";
-     Rcpp::Rcout << "match = " << r.matchedTo() << " Res Ranking = "
-	   << r.rankOf(r.matchedTo()) << "/" << r.rol().size() << "\n";
+      Rcpp::Rcout << "#Resident " << r.id() << ": ";
+      Rcpp::Rcout << "match = " << r.matchedTo() << " Res Ranking = "
+                  << r.rankOf(r.matchedTo()) << "/" << r.rol().size() << "\n";
       nSingRes++;
       if(!r.isMatched()) {
-	++resNotMatched;
+        ++resNotMatched;
       }
       else
-	resAveRank += r.rankOf(r.matchedTo());
-
+        resAveRank += r.rankOf(r.matchedTo());
+      
       if(r.rankOf(r.matchedTo()) == 0)
-	++resGotTopRank;
-
+        ++resGotTopRank;
     }
-
- Rcpp::Rcout << "\n#Couples:\n";
+  }
+  
+  Rcpp::Rcout << "\n#Couples:\n";
   for(const auto&c : Cpl()) {
    Rcpp::Rcout << "#Couple " << c.id() << ": ";
    Rcpp::Rcout << "match = " << c.matchedTo() << " Cpl Ranking = "
@@ -566,7 +571,7 @@ void Problem::printMatch(bool fndMatch, bool outputmatch) {
   }
 
   int matchedProgs {0};
- Rcpp::Rcout << "\n#Programs:\n";
+  Rcpp::Rcout << "\n#Programs:\n";
   for(const auto&p : Prog()) {
    Rcpp::Rcout << "#Program " << p.id() << ": ";
    Rcpp::Rcout << "spares = " << p.quota() - p.accepted().size();

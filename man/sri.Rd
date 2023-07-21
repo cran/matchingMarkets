@@ -26,7 +26,7 @@ are automatically deleted.}
 }
 \description{
 Finds all stable matchings (if one exists) in the 
-\href{http://en.wikipedia.org/wiki/Stable_roommates_problem}{stable roommates problem} with incomplete 
+\href{https://en.wikipedia.org/wiki/Stable_roommates_problem}{stable roommates problem} with incomplete 
 lists using the Prosser (2014) constraint encoding based on either given or randomly generated preferences.
 }
 \examples{
@@ -50,6 +50,8 @@ Structure and Algorithms, MIT Press.
 
 Prosser, P. (2014). Stable Roommates and Constraint Programming. \emph{Lecture Notes in Computer Science, CPAIOR 2014 Edition}. 
 Springer International Publishing, 8451: 15--28.
+
+Irving, R.W. (1985). An efficient algorithm for the "stable roommates" problem. \emph{Journal of Algorithms}, 6(4): 577--595.
 
 Irving, R.W. and S. Scott (2007). The stable fixtures problem: A many-to-many extension of stable roommates. 
 \emph{Discrete Applied Mathematics}, 155: 2118--2129.

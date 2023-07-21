@@ -91,7 +91,7 @@
 #' @param interSel two-colum matrix indicating the indices of columns in \code{W} that should be interacted in estimation. Use 0 for none.
 #' @param standardize numeric: if \code{standardize>0} the independent variables will be standardized by dividing by \code{standardize} times their standard deviation. Defaults to no standardization \code{standardize=0}. 
 #' @param niter number of iterations to use for the Gibbs sampler.
-#' @param verbose .
+#' @param verbose logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.
 #' 
 #' @export
 #' 
@@ -112,6 +112,13 @@
 #' \item{\code{dst}}{sum over all possible two-way distances between players and divide by number of those, where distance is defined as \eqn{e^{-|x-y|}}{exp(-|x-y|)}.}
 #' }
 #' 
+#' @return
+#' \code{stabit} returns for \code{method = "model.frame"}, a list of data from a NTU or TU matching market with the following elements.
+#' \item{OUT}{Model matrix of the outcome data, where \code{m.id} and \code{g.id} are categorical variables for market and group identifier.}
+#' \item{SEL}{Model matrix of the selection data, again with categorical variables \code{m.id} and \code{g.id} for market and group identifier.}
+#' \item{combs}{List of length of the number of markets with each element containing a matrix of all counterfactual group constellations in a market.}
+#' For any other setting of \code{method}, a list of the estimation results is returned.
+#' 
 #' @author Thilo Klein 
 #' 
 #' @keywords regression
@@ -122,7 +129,7 @@
 #' volume 6, pages 233--243. North-Holland, Amsterdam.
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' ## --- SIMULATED EXAMPLE ---
 #' 
 #' ## 1. Simulate one-sided matching data for 200 markets (m=200) with 2 groups
@@ -179,7 +186,7 @@
 #' ## --- REPLICATION, Klein (2015a) ---
 #' 
 #' ## 1. Load data 
-#'  data(baac00); head(baac00)
+#'  data(baac00)
 #'  
 #' ## 2. Run Gibbs sampler
 #'  klein15a <- stabit(x=baac00, selection = list(inv="pi",ieq="wst"), 
@@ -1037,11 +1044,12 @@ designmatrix <- function(selection, outcome, x, simulation=FALSE, assignment,
   data.combs <- D <- R <- V <- P <- E <- combs <- xi <- eta <- epsilon <- 
     lapply(1:numvills, function(i) NA)
   
-  cat("Generating group-level data for", numvills, "markets...","\n")
   if(verbose==TRUE){
+    cat("Generating group-level data for", numvills, "markets...","\n")
     pb <- txtProgressBar(style = 3)
   }
   
+    
   for(i in 1:numvills){
     
     if(i <= dim(spec)[1]){  ## 2-GROUP MARKETS

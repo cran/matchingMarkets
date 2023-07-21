@@ -19,7 +19,7 @@ over column players (or vice versa).}
 \item{Equilibrium.groups}{matrix that gives the \code{N/2} equilibrium pairs and equilibrium partners' mutual valuations.}
 }
 \description{
-Finds the stable matching in the \href{http://en.wikipedia.org/wiki/Stable_roommates_problem}{stable roommates problem} 
+Finds the stable matching in the \href{https://en.wikipedia.org/wiki/Stable_roommates_problem}{stable roommates problem} 
 with transferable utility. 
 Uses the Partitioning Linear Programme formulated in Quint (1991).
 }

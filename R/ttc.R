@@ -18,7 +18,6 @@
 #' @references Abdulkadiroglu, A. and T. Sonmez (1999). House Allocation with Existing Tenants. \emph{Journal of Economic Theory},  88 (2): 233-260.
 #' @references Shapley, L. and H. Scarf (1974). On Cores and Indivisibility. \emph{Journal of Mathematical Economics}, 1(1): 23-37.
 #' @examples
-#' ##\dontrun{
 #' ## 1-a. Generate matrix of individuals' preference rankings over objects,
 #' ## a.k.a. Rank Order Lists (ROL).
 #' s.prefs <- matrix(c(3,2,4,1,        # ROL of student 1
@@ -26,10 +25,10 @@
 #'                    3,1, NA,NA,
 #'                    2,5,6,4,
 #'                    1,3,2,NA,
-#'                    2,4,5,6), nrow = 4, ncol = 6, byrow = FALSE); s.prefs
+#'                    2,4,5,6), nrow = 4, ncol = 6, byrow = FALSE)
 #'
 #' ## 1-b. Generate vector of house occupation objects ('obj') and their owners ('ind')
-#' (houses <- 1:6)
+#' houses <- 1:6
 #'
 #' ## 1-c. Find assignment based on TTC algorithm
 #' ttc(s.prefs = s.prefs, houses = houses, nHouses = 6, priority = 1:6)
@@ -41,18 +40,17 @@
 #'                  7,1,6,5,4,3,2,NA,
 #'                  2,1,4,7,3,6,5,NA,
 #'                  2,4,3,6,1,7,5,NA,
-#'                  4,3,7,1,2,5,6,NA), byrow = FALSE, ncol= 5); s.prefs
+#'                  4,3,7,1,2,5,6,NA), byrow = FALSE, ncol= 5)
 #'
 #' ## 2-b. Generate house occupation, so student 1 lives in house 1, ..., student 4 lives in house 4
 #' ## and the other houses are vacant.
-#' houses <- c(1,2,3,4,NA,NA,NA,NA); houses
+#' houses <- c(1,2,3,4,NA,NA,NA,NA)
 #'
 #' ## 2-c. Generate priority ordering
 #' priority <- 1:5
 #'
 #' ## 2-d. Find assigment
 #' ttc(s.prefs = s.prefs, houses = houses, priority = priority)
-#' ##}
 
 ttc <- function(nStudents = ncol(s.prefs), nHouses = length(houses), s.prefs, houses, priority = NULL, seed = NULL){
   

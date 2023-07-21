@@ -12,9 +12,9 @@
 #' @title All stable matchings in the hospital/residents problem with incomplete lists
 #'
 #' @description Finds \emph{all} stable matchings in either the 
-#' \href{http://en.wikipedia.org/wiki/Hospital_resident}{hospital/residents} problem (a.k.a. college 
+#' \href{https://en.wikipedia.org/wiki/Hospital_resident}{hospital/residents} problem (a.k.a. college 
 #' admissions problem) or the related 
-#' \href{http://en.wikipedia.org/wiki/Stable_matching}{stable marriage} problem. 
+#' \href{https://en.wikipedia.org/wiki/Stable_matching}{stable marriage} problem. 
 #' Dependent on the problem, the results comprise the student and college-optimal or 
 #' the men and women-optimal matchings. The implementation allows for \emph{incomplete preference 
 #' lists} (some agents find certain agents unacceptable) and \emph{unbalanced instances} (unequal 
@@ -42,6 +42,7 @@
 #' the range \code{[c.min, c.max]}. Note: interval is only correct if either c.range or s.range is used.
 #' @param randomization determines at which level random lottery numbers for student priorities are drawn. The default is \code{randomization = "multiple"}, where a student's priority is determined by a separate lottery at each college (i.e. local tie-breaking). For the second variant, \code{randomization = "single"}, a single lottery number determines a student's priority at all colleges (i.e. global tie breaking). 
 #' @param check_consistency Performs consicentcy checks (Checks if there are columns in the preference matrices that only contains zeros and drops them and checks the matrixes for consistencies if they are given by characters). Defaults to \code{TRUE} but changing it to \code{FALSE} might reduce the running-time for large problems.
+#' @param verbose logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.
 #' @param ... .
 #' 
 #' @export
@@ -83,7 +84,6 @@
 #' Springer International Publishing, 8451: 15--28.
 #' 
 #' @examples
-#' \dontrun{
 #' ## -----------------------
 #' ## --- Marriage problem 
 #' 
@@ -131,6 +131,7 @@
 #'                       NA, NA,NA,
 #'                      'S2', 'S1', 'S5'),
 #'                    nrow = 3, ncol = 5)
+#'  
 #'  # Note that we explicitly allow for the existence of entries refering to colleges
 #'  # that do not exist. A warning is generated and the entry is ignored.
 #'  colnames(s.prefs) <- c('A', 'B', 'C', 'D', 'E')
@@ -139,21 +140,25 @@
 #'                      'D', 'B', 'A', 'E'),
 #'                    nrow = 4, ncol = 3)
 #'  colnames(c.prefs) <- c('S1', 'S2', 'S3')
+#'  \donttest{
 #'  hri(s.prefs=s.prefs, c.prefs=c.prefs, nSlots=c(3,3,3), check_consistency = TRUE)
+#'  }
+#'  
 #' ## --------------------
 #' ## --- Summary plots
 #' 
+#' \donttest{
 #' ## 200 students, 200 colleges with 1 slot each
 #'  res <- hri(nStudents=200, nColleges=200, seed=12)
 #'  plot(res)
 #'  plot(res, energy=TRUE)
 #' }
 hri <- function(nStudents=ncol(s.prefs), nColleges=ncol(c.prefs), nSlots=rep(1,nColleges), 
-                s.prefs=NULL, c.prefs=NULL, s.range=NULL, c.range=NULL, randomization=NULL, seed=NULL, check_consistency = TRUE, ...) UseMethod("hri")
+                s.prefs=NULL, c.prefs=NULL, s.range=NULL, c.range=NULL, randomization=NULL, seed=NULL, check_consistency = TRUE, verbose = FALSE, ...) UseMethod("hri")
 
 #' @export
 hri.default <- function(nStudents=ncol(s.prefs), nColleges=ncol(c.prefs), nSlots=rep(1,nColleges), 
-                        s.prefs=NULL, c.prefs=NULL, s.range=NULL, c.range=NULL, randomization='multiple', seed=NULL, check_consistency = TRUE, ...){
+                        s.prefs=NULL, c.prefs=NULL, s.range=NULL, c.range=NULL, randomization='multiple', seed=NULL, check_consistency = TRUE, verbose = FALSE, ...){
   
   
   ###############################################################  
@@ -354,14 +359,18 @@ hri.default <- function(nStudents=ncol(s.prefs), nColleges=ncol(c.prefs), nSlots
   if( length(drop)>0 ){
     s.prefs <- matrix(s.prefs[,-drop], nrow=nrow(s.prefs))
     colnames(s.prefs) <- s.names[-drop]
-    print(paste("Dropped s.prefs column(s):", paste(s.names[drop], collapse=", ")))
+    if(verbose == TRUE){
+      print(paste("Dropped s.prefs column(s):", paste(s.names[drop], collapse=", ")))
+    }
+
   }
   drop <- which( apply(c.prefs, 2, function(z) all(is.na(z))))
   if( length(drop)>0 ){
     c.prefs <- matrix(c.prefs[,-drop], nrow=nrow(c.prefs))
     colnames(c.prefs) <- c.names[-drop]
-    print(paste("Dropped c.prefs column(s):", paste(c.names[drop], collapse=", ")))
-    
+    if(verbose == TRUE){
+      print(paste("Dropped c.prefs column(s):", paste(c.names[drop], collapse=", ")))
+    }
     # Update nSlots:
     nSlots <- nSlots[-drop]
   }
@@ -376,8 +385,8 @@ hri.default <- function(nStudents=ncol(s.prefs), nColleges=ncol(c.prefs), nSlots
   ##### Replace college/student names with ids
   
   # Save prefs
-  s.prefs_named <-  s.prefs;
-  c.prefs_named <-  c.prefs;
+  s.prefs_named <-  s.prefs
+  c.prefs_named <-  c.prefs
   
   # Replace names with IDs
   s.names <- 1:ncol(s.prefs)
@@ -609,7 +618,11 @@ plot.hri <- function(x, energy=FALSE, ...){
   x <- with(x, x[order(csSatisf),])
   
   ## set graphic parameters
+  #par(mar = c(5.1, 4.1, 1.8, 0.5))
+  oldpar <- par(mar=c(5.1, 4.1, 4.1, 2.1))
+  on.exit(par(oldpar))
   par(mar = c(5.1, 4.1, 1.8, 0.5))
+  
   lightgray <- rgb(84,84,84, 50, maxColorValue=255) 
   
   add_legend <- function(...) {
@@ -654,7 +667,7 @@ plot.hri <- function(x, energy=FALSE, ...){
              horiz=TRUE, bty='n')
   
   ## reset R default
-  par(mar=c(5.1, 4.1, 4.1, 2.1)) 
+  #par(mar=c(5.1, 4.1, 4.1, 2.1)) 
   
 }
 

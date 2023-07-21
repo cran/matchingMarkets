@@ -49,7 +49,7 @@ preference (i.e. most preferred first).}
 }
 \description{
 Finds the optimal assignment of students to colleges in the
-\href{http://en.wikipedia.org/wiki/Hospital_resident}{college admissions} problem
+\href{https://en.wikipedia.org/wiki/Hospital_resident}{college admissions} problem
 based on the Boston mechanism. The algorithmen is also applicable to the stable marriage problem. The option \code{acceptance="deferred"} instead uses the Gale-Shapley
 (1962) Deferred Acceptance Algorithm with student offer. The function works with either
 given or randomly generated preferences.
@@ -66,7 +66,6 @@ given or randomly generated preferences.
 }
 
 \examples{
-##\dontrun{
 ## --------------------------------
 ## --- College admission problem
 
@@ -75,11 +74,11 @@ s.prefs <- matrix(c(1,2,3,
                     1,2,3,
                     2,1,3,
                     2,1,3),
-                  byrow = FALSE, ncol = 5, nrow = 3); s.prefs
+                  byrow = FALSE, ncol = 5, nrow = 3)
 c.prefs <- matrix(c(1,4,2,3,5,
                     5,2,3,4,1,
                     1,2,3,4,5),
-                  byrow = FALSE, ncol = 3, nrow = 5); c.prefs
+                  byrow = FALSE, ncol = 3, nrow = 5)
 nSlots <- c(2,2,1)
 
 ## Boston mechanism
@@ -93,7 +92,6 @@ nSlots <- c(2,2,1)
  iaa(nStudents=7, nSlots=c(3,3), acceptance="deferred")$matchings
  set.seed(123)
  hri2(nStudents=7, nSlots=c(3,3))$matchings
- ##}
 }
 \references{
 Gale, D. and Shapley, L.S. (1962). College admissions and the stability

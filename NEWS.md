@@ -2,9 +2,7 @@
 # matchingMarkets 1.0-2
 
 Please note that only the most significant changes are reported here.
-A full ChangeLog is available in the log messages of the SVN repository
-on [R-Forge](https://r-forge.r-project.org/scm/viewvc.php/?root=matchingmarkets)
-and on [GitHub](https://github.com/thiloklein/matchingMarkets).
+A full ChangeLog is available on [GitHub](https://github.com/thiloklein/matchingMarkets).
 
 This is a minor update
 
@@ -65,7 +63,7 @@ This is a major update
 
 This is a major update
 
-* Added [package vignette](https://CRAN.R-project.org/package=matchingMarkets/vignettes/matching.pdf). 
+* Added package vignette. 
 
 
 # matchingMarkets 0.1-5

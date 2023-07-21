@@ -16,7 +16,6 @@
 #' @keywords algorithms
 #' @references Roth, A.; T. Sonmez; U. Unver (2004). Kidney Exchange. \emph{Quarterly Journal of Economics}, 119 (2): 457-488.
 #' @examples
-#' ##\dontrun{
 #' ## Compare Example 1 from Roth et al. (2004) on page 469 - 475
 #' ## generate matrix of patients' preference rankings over kidneys, a.k.a. Rank Order Lists (ROL)
 #'
@@ -32,12 +31,12 @@
 #'                   11, 1, 4, 5, 6, 7,13,
 #'                    3, 6, 5,11,NA,NA,NA,
 #'                   11, 3, 9, 8,10,12,NA),
-#'               byrow = FALSE, ncol = 12); prefs
+#'               byrow = FALSE, ncol = 12)
 #' priority <- 1:12
 #' ttcc(prefs = prefs, priority = priority)
 #' ## The final matching differs slightly because in Round 3 another chain is chosen due to a different
 #' ## decision rule (compare Figure 3, p472. Here W1 instead of W2 is chosen)
-#' ##}
+
 
 ttcc <- function(nPatients = ncol(prefs), prefs, priority = NULL, seed = NULL){
   # Chain Rule:   Searches for the longest chain and removes it from the problem (even the first kidney which was unassigned)

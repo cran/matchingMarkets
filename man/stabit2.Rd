@@ -17,6 +17,7 @@ stabit2(
   censored = 1,
   thin = 1,
   nCores = max(1, detectCores() - 1),
+  verbose = FALSE,
   ...
 )
 }
@@ -47,7 +48,26 @@ market identifier \code{m.id}, college identifier \code{c.id} and student identi
 
 \item{nCores}{number of cores to be used in parallel Gibbs sampling.}
 
+\item{verbose}{logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.}
+
 \item{...}{.}
+}
+\value{
+\code{stabit2} returns a list of the estimation results with the following elements.
+\item{sigma}{numeric scalar: standard deviation fixed to 1.}
+\item{eta}{numeric vector: residuals of the selection equation.}
+\item{vcov}{List of variance covariance matrices for coefficients alpha and beta of selection and outcome equations.}
+\item{coefficients}{numeric vector: coefficients of selection and outcome equations.}
+\item{fitted.values}{numeric vector: fitted values for outcome data.}
+\item{residuals}{numeric vector: residuals of the outcome equation.}
+\item{df}{integer: degrees of freedom.}
+\item{binary}{logical: if \code{TRUE} outcome variable was taken to be binary; if \code{FALSE} outcome variable was taken to be continuous.}
+\item{formula}{estimated formula.}
+\item{call}{function call.}
+\item{method}{One of "Sorensen", "Klein" or "Klein-selection". Method "Sorensen" is used when a single selection equation is passed. It assumes an equal sharing rule for student and college utility. Method "Klein" is used when two selection equations (one for students, one for schools) and one outcome equations are passed. Method "Klein-selection" only models selection and therefore does not require an outcome equations.}
+\item{draws}{List of Gibbs sampling draws for alpha and beta coefficients.}
+\item{coefs}{Posterior means of the Gibbs sampling draws.}
+\item{variables}{List of data used in the estimation.}
 }
 \description{
 The function provides a Gibbs sampler for a structural matching model that 
@@ -91,7 +111,7 @@ of \eqn{\epsilon} and \eqn{\eta} would be independent and the selection problem 
 That is, the observed outcomes would be a random sample from the population of interest.
 }
 \examples{
-\dontrun{
+\donttest{
 ## --- SIMULATED EXAMPLE ---
 
 ## 1. Simulate two-sided matching data for 20 markets (m=20) with 100 students

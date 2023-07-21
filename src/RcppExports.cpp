@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // runMatch
 List runMatch(Rcpp::List students, Rcpp::List programs, Rcpp::List couples);
 RcppExport SEXP _matchingMarkets_runMatch(SEXP studentsSEXP, SEXP programsSEXP, SEXP couplesSEXP) {

@@ -23,8 +23,7 @@
 #' 
 #' @import stats
 #' 
-#' @return
-#' \code{stabsim} returns a data frame with the randomly generated variables 
+#' @return \code{stabsim} returns a data frame with the randomly generated variables 
 #' mimicking those in dataset \code{\link{baac00}}.
 #' \item{m.id}{categorical: market identifier.}
 #' \item{g.id}{categorical: group identifier.}

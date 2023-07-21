@@ -13,6 +13,9 @@ khb(X, y, z)
 
 \item{z}{character string giving the name of the confounding variable in \code{X}.}
 }
+\value{
+\code{khb} returns for all model coefficients the p-value for the null hypothesis that the change in coefficients is not attributable to confounding by z.
+}
 \description{
 Significance test for confounding; that is, the difference between regression 
 coefficients from same-sample nested logit and probit models. The test procedure follows

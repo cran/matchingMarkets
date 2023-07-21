@@ -53,7 +53,7 @@ densityplot( ~ Structural + OLS | type, plot.points=FALSE, auto.key=keys,
          panel.abline(v=-1, lty=3)
        })
 
-\dontrun{
+\donttest{
 ## Modes of posterior distributions
 
 ## load data

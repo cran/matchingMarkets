@@ -15,6 +15,7 @@
 #' @param priority (Optional) vector of length \code{nStudents}. Gives the prioirity ordering of the students in the search for cycles (Do not confuse it with the preferences!), if nothing is specified a random ordering is chosen.
 #' @param seed (Optional) integer setting the state for random number generation. Defaults to seed = NULL
 #' @param full_return (Optinal) If \code{TRUE} the return value is a list with the matching, the remaining seats and the unmatchable students is returned. Defaults to \code{FALSE} and only the matching is returned.
+#' @param verbose logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.
 #'
 #' @export
 #'
@@ -23,7 +24,6 @@
 #' @keywords algorithms
 #' @references Abdulkadiroglu, A. and T. Sonmez (2003). School Choice: A Mechanism Design Approach. \emph{American Economic Review}, 93 (3): 729-747.
 #' @examples
-#' ##\dontrun{
 #' ## 1-a. Compare example from the Abdulkadiroglu et al. (2003) (in the Appendix, page 742-744)
 #' ## 1-b. Generate matrix of students' preference rankings over schools, a.k.a. Rank Order Lists (ROL)
 #' s.prefs <- matrix(c(
@@ -35,7 +35,7 @@
 #'                   4,1,2,3,
 #'                   1,2,3,4,
 #'                   1,2,4,3),
-#'                   byrow = FALSE, ncol = 8); s.prefs
+#'                   byrow = FALSE, ncol = 8)
 #'
 #' ## 1-c. Generate matrix of schools' preference rankings over students, a.k.a. Rank Order Lists (ROL)
 #' c.prefs <- matrix(c(
@@ -43,7 +43,7 @@
 #'                   3,5,4,8,7,2,1,6,
 #'                   5,3,1,7,2,8,6,4,
 #'                   6,8,7,4,2,3,5,1),
-#'                   byrow = FALSE, ncol = 4); c.prefs
+#'                   byrow = FALSE, ncol = 4)
 #'
 #' ## 1-d. Generate capacities
 #' nSlots <- c(2,2,3,3)
@@ -57,7 +57,7 @@
 #'                    3,5,4,8,7,2,1,6,
 #'                    5,3,1,7,2,8,6,4,
 #'                    6,8,7,4,2,3,5,1),
-#'                    byrow = FALSE, ncol = 4); c.prefs
+#'                    byrow = FALSE, ncol = 4)
 #'
 #' ## 2-b. Find assignment based on TTC algorithm
 #' ttc2(s.prefs = s.prefs, c.prefs = c.prefs, nSlots = nSlots, priority = 1:8)
@@ -74,12 +74,11 @@
 #'                   byrow = FALSE, ncol = 4)
 #' priority <- c.prefs[,1]
 #'
-#' match_ttc <- ttc2(s.prefs = s.prefs, c.prefs = c.prefs, nSlots = nSlots); match_ttc
-#' match_sd <- rsd(prefs = s.prefs, priority = priority, nSlots = nSlots); match_sd
+#' match_ttc <- ttc2(s.prefs = s.prefs, c.prefs = c.prefs, nSlots = nSlots)
+#' match_sd <- rsd(prefs = s.prefs, priority = priority, nSlots = nSlots)
 #' all(match_ttc == match_sd)
-#' ##}
 
-ttc2 <- function( nStudents = ncol(s.prefs), nColleges = ncol(c.prefs), s.prefs = NULL,  c.prefs = NULL,nSlots = NULL, priority = NULL , seed = NULL, full_return = FALSE){
+ttc2 <- function( nStudents = ncol(s.prefs), nColleges = ncol(c.prefs), s.prefs = NULL,  c.prefs = NULL,nSlots = NULL, priority = NULL , seed = NULL, full_return = FALSE, verbose = FALSE){
   
   ## To Do
   ## Slots in find_cycle aktualisieren?
@@ -107,7 +106,7 @@ ttc2 <- function( nStudents = ncol(s.prefs), nColleges = ncol(c.prefs), s.prefs 
   while(!all(matched_stud)){
     
     if(all(nSlots <= 0)){
-      print('Not enough capacity!')
+      stop('Not enough capacity!')
       break
     }
     # Find Cycle
@@ -131,8 +130,10 @@ ttc2 <- function( nStudents = ncol(s.prefs), nColleges = ncol(c.prefs), s.prefs 
   }
   
   if(length(unmatchable_stud) > 0){
-    print('It was not possible to match the following student(s) according to their preference rankings:')
-    print(unmatchable_stud)
+    if(verbose == TRUE){
+      print('It was not possible to match the following student(s) according to their preference rankings:')
+      print(unmatchable_stud)
+    }
   }
   
   match_return <- Res[order(Res$ind),]

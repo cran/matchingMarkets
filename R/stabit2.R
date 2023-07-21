@@ -63,6 +63,7 @@
 #' @param censored draws of the \code{kappa} parameter that estimates the covariation between the error terms in selection and outcome equation are 0:not censored, 1:censored from below, 2:censored from above.
 #' @param thin integer indicating the level of thinning in the MCMC draws. The default \code{thin=1} saves every draw, \code{thin=2} every second, etc.
 #' @param nCores number of cores to be used in parallel Gibbs sampling.
+#' @param verbose logical. When set to \code{TRUE}, writes information messages on the console (recommended). Defaults to \code{FALSE}, which suppresses such messages.
 #' @param ... .
 #' 
 # @param selection.college formula for match valuations of colleges. Is ignored when \code{selection} is provided.
@@ -84,6 +85,23 @@
 #' @importFrom Rcpp evalCpp
 #' @importFrom graphics par plot
 #' 
+#' @return
+#' \code{stabit2} returns a list of the estimation results with the following elements.
+#' \item{sigma}{numeric scalar: standard deviation fixed to 1.}
+#' \item{eta}{numeric vector: residuals of the selection equation.}
+#' \item{vcov}{List of variance covariance matrices for coefficients alpha and beta of selection and outcome equations.}
+#' \item{coefficients}{numeric vector: coefficients of selection and outcome equations.}
+#' \item{fitted.values}{numeric vector: fitted values for outcome data.}
+#' \item{residuals}{numeric vector: residuals of the outcome equation.}
+#' \item{df}{integer: degrees of freedom.}
+#' \item{binary}{logical: if \code{TRUE} outcome variable was taken to be binary; if \code{FALSE} outcome variable was taken to be continuous.}
+#' \item{formula}{estimated formula.}
+#' \item{call}{function call.}
+#' \item{method}{One of "Sorensen", "Klein" or "Klein-selection". Method "Sorensen" is used when a single selection equation is passed. It assumes an equal sharing rule for student and college utility. Method "Klein" is used when two selection equations (one for students, one for schools) and one outcome equations are passed. Method "Klein-selection" only models selection and therefore does not require an outcome equations.}
+#' \item{draws}{List of Gibbs sampling draws for alpha and beta coefficients.}
+#' \item{coefs}{Posterior means of the Gibbs sampling draws.}
+#' \item{variables}{List of data used in the estimation.}
+#' 
 #' @author Thilo Klein 
 #' 
 #' @keywords regression
@@ -92,7 +110,7 @@
 #' \emph{Journal of Finance}, 62 (6): 2725-2762.
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' ## --- SIMULATED EXAMPLE ---
 #' 
 #' ## 1. Simulate two-sided matching data for 20 markets (m=20) with 100 students
@@ -168,12 +186,12 @@
 #' }
 stabit2 <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, outcome=NULL, selection,
                     binary=FALSE, niter, gPrior=FALSE, 
-                    censored=1, thin=1, nCores=max(1,detectCores()-1), ...) UseMethod("stabit2")
+                    censored=1, thin=1, nCores=max(1,detectCores()-1), verbose = FALSE, ...) UseMethod("stabit2")
 
 #' @export
 stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, outcome=NULL, selection,
                             binary=FALSE, niter, gPrior=FALSE, 
-                            censored=1, thin=1, nCores=max(1,detectCores()-1), ...){
+                            censored=1, thin=1, nCores=max(1,detectCores()-1), verbose = FALSE, ...){
   
   ## ------------------------
   ## --- 1. Preliminaries ---
@@ -341,7 +359,9 @@ stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, ou
         c.betterNA=c.betterNA[Ts[[i]]], c.worseNA=c.worseNA[Ts[[i]]], s.betterNA=s.betterNA[Ts[[i]]], s.worseNA=s.worseNA[Ts[[i]]])
       })
       
-      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      if(verbose == TRUE){
+        cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      }
       res <- parLapply(cl, parObject, function(d){
         
         with(d, stabit2Sel0(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, 
@@ -368,7 +388,9 @@ stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, ou
              binary=binary, niter=niter, thin=thin, T=length(Ts[[i]]), censored=censored)
       })
       
-      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      if(verbose == TRUE){
+        cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      }
       res <- parLapply(cl, parObject, function(d){
         
         with(d, stabit2Sel1(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, 
@@ -393,8 +415,10 @@ stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, ou
              c.better=c.better[Ts[[i]]], c.worse=c.worse[Ts[[i]]], s.better=s.better[Ts[[i]]], s.worse=s.worse[Ts[[i]]],
              c.betterNA=c.betterNA[Ts[[i]]], c.worseNA=c.worseNA[Ts[[i]]], s.betterNA=s.betterNA[Ts[[i]]], s.worseNA=s.worseNA[Ts[[i]]])
       })
-      
-      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+     
+      if(verbose == TRUE){ 
+        cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      }
       res <- parLapply(cl, parObject, function(d){  
         
         with(d, stabit2Mat0(Cr=C, Cmatchr=Cmatch, Sr=S, Smatchr=Smatch, Dr=D, 
@@ -419,7 +443,9 @@ stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, ou
              N=sum(unlist(nColleges[Ts[[i]]])), niter=niter, thin=thin, T=length(Ts[[i]]))
       })
       
-      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      if(verbose == TRUE){
+        cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      }
       res <- parLapply(cl, parObject, function(d){  
         
         with(d, stabit2Mat1(Cr=C, Cmatchr=Cmatch, Sr=S, Smatchr=Smatch, Dr=D, 
@@ -443,7 +469,9 @@ stabit2.default <- function(OUT=NULL, SEL=NULL, colleges=NULL, students=NULL, ou
              binary=binary, niter=niter, thin=thin, T=length(Ts[[i]]), censored=censored)
       })
       
-      cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      if(verbose == TRUE){
+        cat(paste("Running parallel Gibbs sampler on", nCores, "cores...", sep=" "))
+      }
       res <- parLapply(cl, parObject, function(d){  
         
         with(d, stabit2Sel2(Yr=Y, Xmatchr=Xmatch, Cr=C, Cmatchr=Cmatch, 
