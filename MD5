@@ -1,6 +1,6 @@
-b9a8b70e631ba40f9a1b0a6554d2d904 *DESCRIPTION
+e55b84476a62127e9a056d46b18a3cce *DESCRIPTION
 6dc0e332f4cbfdc03808416b6f55ec67 *NAMESPACE
-39436c3937e8ddca1b52a22d3401b154 *NEWS.md
+1568a077f3af3f849ae5bba7505c11df *NEWS.md
 1f9b9e36e4cca8ee3bc3dc2eefd2de51 *R/RcppExports.R
 74067341bffa07f053b404e31daddf25 *R/hri.R
 c6352a2e8a1e15974ac155d8058ab2f2 *R/hri2.R
@@ -33,9 +33,9 @@ b40599cbf020ed1732743a441c01a754 *data/datalist
 c119aad8e5527dc64c58b24f27d046b1 *inst/CITATION
 96201881040d961817174acbedbb9969 *inst/COPYRIGHTS
 e7f93094f35435ba9eda01f6a71dcbe8 *inst/doc/matching.Rnw
-c6f139c78a0bc12cd1bc33d8a79d8e16 *inst/doc/matching.pdf
+6eb1a138179899935a165abd1151c02a *inst/doc/matching.pdf
 cf060d8e06ef1ab045021e6e59c4ef0b *inst/include/IntMap.h
-1eca8531afc59b7f0ab8a5d4e1639680 *inst/include/IntTypes.h
+cb14e5f83c1d861ea4ee5f2dcbae2495 *inst/include/IntTypes.h
 0fd00b1b864c00664429f7bf91c55748 *inst/include/Options.h
 d7e67e4f23aa672988e6653af499bba2 *inst/include/ParseUtils.h
 0c1b4763471d138c8cf12de54bf58141 *inst/include/Queue.h
@@ -61,7 +61,7 @@ c0560930c0fc899f0532a489ab41b665 *java/smi.java
 6c288bf46f8a2f55549a89dd03ba58f2 *man/khb.Rd
 5866dcf12fbf929410fb57019fd23743 *man/klein15a.Rd
 01971f46a053df76e43523e196b7dda4 *man/klein15b.Rd
-d0ed6e38fc344bf72a52b5d86cc57da0 *man/matchingMarkets-package.Rd
+b3416ee82dfe1d55bbaeaf18b9c01158 *man/matchingMarkets-package.Rd
 aee43be8ec1d5dce2209390adb22f5d0 *man/plp.Rd
 4352c2d08c0b6e587b3e65c8ac9105e4 *man/predict.stabit2.Rd
 94962bdfb3d20ba0a8b70b2dcfaf188a *man/rsd.Rd
@@ -79,7 +79,7 @@ c69e7404615af8962035d58bf3d0ab91 *src/Makevars.win
 f9643ccd249efc036f40581c0a952088 *src/Options.cc
 d605fd7075669298842eb43d2e2e12ca *src/RcppExports.cpp
 99e9d15103eead1fca20c2e442019554 *src/System.cc
-4ac94a88c3332e27080a321a685efce1 *src/kprmatcher.cc
+c64a04bc8604343f4e06d43420478765 *src/kprmatcher.cc
 60ee54bb42f3eb828c887aab7b2d0e3d *src/params.cc
 34410486bb1ec7d6069d7ac6884c780f *src/problem.cc
 57c5885b1944137632bdbb4a09ea77ea *src/rcp.cc

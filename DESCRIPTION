@@ -1,5 +1,5 @@
 Package: matchingMarkets
-Version: 1.0-3
+Version: 1.0-4
 Depends: R (>= 3.0.2)
 Imports: Rcpp (>= 0.12.12), RcppProgress (>= 0.2), lpSolve, lattice,
         parallel, partitions, rJava, stats, utils
@@ -26,7 +26,7 @@ Description: Implements structural estimators to correct for
     The package also contains algorithms to find stable matchings
     in the three most common matching problems: the stable roommates
     problem (Irving, 1985) <doi:10.1016/0196-6774(85)90033-1>, 
-    the college admissions problem (Gale and Shapley, 1962) <https://www.jstor.org/stable/2312726>, 
+    the college admissions problem (Gale and Shapley, 1962) <doi:10.2307/2312726>, 
     and the house allocation problem (Shapley and Scarf, 1974) <doi:10.1016/0304-4068(74)90033-0>.
 URL: https://matchingMarkets.org, https://klein.uk
 BugReports: https://github.com/thiloklein/matchingMarkets/issues
@@ -35,7 +35,7 @@ RoxygenNote: 7.2.3
 Encoding: UTF-8
 Copyright: file COPYRIGHTS
 NeedsCompilation: yes
-Packaged: 2023-07-20 19:42:35 UTC; TKN
+Packaged: 2023-08-08 04:43:54 UTC; TKN
 Author: Thilo Klein [aut, cre, cph],
   Robert Aue [ctb],
   Fahiem Bacchus [cph],
@@ -44,4 +44,4 @@ Author: Thilo Klein [aut, cre, cph],
   Alexander Sauer [ctb],
   Niklas Sorensson [cph]
 Repository: CRAN
-Date/Publication: 2023-07-21 07:50:02 UTC
+Date/Publication: 2023-08-08 10:30:05 UTC

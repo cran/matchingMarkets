@@ -1,5 +1,5 @@
 
-# matchingMarkets 1.0-2
+# matchingMarkets 1.0-4
 
 Please note that only the most significant changes are reported here.
 A full ChangeLog is available on [GitHub](https://github.com/thiloklein/matchingMarkets).

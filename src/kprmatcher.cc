@@ -46,7 +46,7 @@ using std::vector;
 using std::pair;
 //using std::Rcpp::Rcout ;
 using std::cerr;
-using std::random_shuffle;
+using std::shuffle;
 
 template<typename T> 
 //Add to r to deque only if r is not already in deque
